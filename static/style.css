@@ -1,0 +1,29 @@
+
+
+.flex {
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.kachel {
+
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    padding: 5px;
+    flex-grow: 1;
+
+}
+
+.kachelOk {
+
+    background-color: rgb(78, 255, 78);
+}
+
+.kachelNOk {
+
+    background-color: rgb(255, 43, 43);
+}
+

@@ -1,0 +1,94 @@
+<html>
+
+<title>ServiceChecker</title>
+
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<script>
+
+    setInterval(function () {
+        update();
+    }, 5000);
+
+    function update() {
+
+        httpGetAsync("/api/states", function (response) {
+
+            draw(JSON.parse(response))
+            //console.log(response);
+        });
+    }
+    update();
+
+    function draw(data) {
+
+        var holder = document.createElement("div");
+        holder.classList.add("flex");
+
+
+        for (const service of data) {
+
+            // create Kachel
+            const kachel = document.createElement("div");
+            kachel.classList.add("kachel");
+            if (service.Ok) {
+                kachel.classList.add("kachelOk");
+            } else {
+                kachel.classList.add("kachelNOk");
+            }
+
+            kachel.setAttribute('title', 'HTTP-Code: ' + service.HTTPCode + ' Body: ' + service.Response);
+
+            let row = document.createElement("div");
+            row.append(document.createTextNode(service.Service));
+            kachel.append(row);
+
+            row = document.createElement("div");
+            row.append(document.createTextNode("Fehler: " + service.ErrorCount));
+            kachel.append(row);
+
+            row = document.createElement("div");
+            row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
+            kachel.append(row);
+
+
+            holder.append(kachel);
+        }
+
+
+        var baseDiv = document.getElementById('data');
+        baseDiv.innerHTML = '';
+
+        baseDiv.append(holder);
+    }
+
+
+
+
+    function httpGetAsync(theUrl, callback) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                callback(xmlHttp.responseText);
+        }
+        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+        xmlHttp.send(null);
+    }
+
+</script>
+
+
+<body>
+
+    <div id="data">
+
+        <div>No Data</div>
+
+    </div>
+</body>
+
+
+</html>
