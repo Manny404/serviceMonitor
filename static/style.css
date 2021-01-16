@@ -17,6 +17,12 @@
 
 }
 
+.headerKachel {
+
+    text-align: center;
+    padding: 25px;
+}
+
 .kachelOk {
 
     background-color: rgb(78, 255, 78);

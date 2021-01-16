@@ -18,7 +18,6 @@
         httpGetAsync("/api/states", function (response) {
 
             draw(JSON.parse(response))
-            //console.log(response);
         });
     }
     update();
@@ -29,6 +28,10 @@
         holder.classList.add("flex");
 
 
+        let services = 0;
+        let servicesOk = 0;
+        let servicesNok = 0;
+
         for (const service of data) {
 
             // create Kachel
@@ -36,9 +39,12 @@
             kachel.classList.add("kachel");
             if (service.Ok) {
                 kachel.classList.add("kachelOk");
+                servicesOk++;
             } else {
                 kachel.classList.add("kachelNOk");
+                servicesNok++;
             }
+            services++;
 
             kachel.setAttribute('title', 'HTTP-Code: ' + service.HTTPCode + ' Body: ' + service.Response);
 
@@ -58,10 +64,28 @@
             holder.append(kachel);
         }
 
+        // create header
+        var header = document.createElement("div");
+        header.classList.add("flex");
+        let kachel = document.createElement("div");
+        kachel.classList.add("kachel");
+        kachel.classList.add("kachelOk");
+        kachel.classList.add("headerKachel");
+        kachel.append(document.createTextNode(servicesOk + "/" + services));
+        header.append(kachel);
+
+        kachel = document.createElement("div");
+        kachel.classList.add("kachel");
+        kachel.classList.add("kachelNOk");
+        kachel.classList.add("headerKachel");
+        kachel.append(document.createTextNode(servicesNok + "/" + services));
+        header.append(kachel);
+
 
         var baseDiv = document.getElementById('data');
         baseDiv.innerHTML = '';
 
+        baseDiv.append(header);
         baseDiv.append(holder);
     }
 

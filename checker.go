@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/smtp"
 	"time"
 )
 
@@ -42,12 +45,12 @@ func (a *App) checkService(serviceState *ServiceState) {
 
 		case <-time.After(time.Duration(waitTime) * time.Second):
 
-			check(serviceState)
+			a.check(serviceState)
 		}
 	}
 }
 
-func check(serviceState *ServiceState) {
+func (a *App) check(serviceState *ServiceState) {
 
 	// fmt.Println(serviceState.Service.URL)
 	serviceState.ErrorCount++
@@ -55,9 +58,18 @@ func check(serviceState *ServiceState) {
 	state.time = time.Now()
 	state.Ok = false
 
-	resp, err := http.Get(serviceState.Service.URL)
+	var resp *http.Response
+	var err error
+
+	if serviceState.Service.Methode == "POST" {
+		postBody, _ := json.Marshal(serviceState.Service.Postparam)
+		responseBody := bytes.NewBuffer(postBody)
+		resp, err = http.Post(serviceState.Service.URL, "application/json", responseBody)
+	} else {
+		resp, err = http.Get(serviceState.Service.URL)
+	}
+
 	if err != nil {
-		log.Println(serviceState.Service.URL)
 		log.Println(err)
 		state.Response = err.Error()
 	} else {
@@ -67,7 +79,6 @@ func check(serviceState *ServiceState) {
 		//We Read the response body on the line below.
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Println(serviceState.Service.URL)
 			log.Println(err)
 			state.Response = err.Error()
 
@@ -82,7 +93,7 @@ func check(serviceState *ServiceState) {
 	}
 
 	if !state.Ok && serviceState.States[1].Ok {
-		sendEmail(state)
+		a.sendEmail(state, serviceState)
 	}
 
 	serviceState.States = prependState(serviceState.States, state)
@@ -95,17 +106,23 @@ func prependState(x []State, y State) []State {
 	return x
 }
 
-func sendEmail(state State) {
-	// auth := smtp.PlainAuth("", "piotr@mailtrap.io", "extremely_secret_pass", "smtp.mailtrap.io")
+func (a *App) sendEmail(state State, serviceState *ServiceState) {
 
-	// // Here we do it all: connect to our server, set up a message and send it
-	// to := []string{"billy@microsoft.com"}
-	// msg := []byte("To: billy@microsoft.com\r\n" +
-	// 	"Subject: Why are you not using Mailtrap yet?\r\n" +
-	// 	"\r\n" +
-	// 	"Here’s the space for our great sales pitch\r\n")
-	// err := smtp.SendMail("smtp.mailtrap.io:25", auth, "piotr@mailtrap.io", to, msg)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	if !a.Conf.SMTPActive {
+		return
+	}
+
+	auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
+
+	// Here we do it all: connect to our server, set up a message and send it
+	to := a.Conf.ReportEmails
+	msg := []byte("To: \r\n" +
+		"Subject: Service " + serviceState.Service.URL + " has an error \r\n" +
+		"\r\n" +
+		"Service " + serviceState.Service.URL + " has an error. " + state.Response + " \r\n")
+	err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
+	if err != nil {
+		log.Println(err)
+	}
+
 }

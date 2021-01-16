@@ -2,8 +2,11 @@
     "CheckTime": 5,
     "MaxCheckTime": 120,
     "Port": "5000",
-    "SMTPHost": "smtp.chrku.de",
-    "SMTPPort": "500",
+    "ReportEmails": [
+        "bla@chrku.de"
+    ],
+    "SMTPActive": false,
+    "SMTPURL": "smtp.chrku.de",
     "SenderEmail": "bla@chrku.de",
     "Services": [
         {
@@ -15,6 +18,14 @@
             "Active": true,
             "URL": "https://www.google222222222.de",
             "Method": "GET"
+        },
+        {
+            "Active": true,
+            "URL": "https://www.google33.de",
+            "Method": "POST",
+            "Postparam": {
+                "test": "test2"
+            }
         }
     ]
 }

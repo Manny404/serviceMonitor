@@ -10,13 +10,26 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 )
 
 type App struct {
 	Router *mux.Router
 	Conf   *Configuration
 	States []*ServiceState
+}
+
+type Configuration struct {
+	CheckTime    int
+	MaxCheckTime int
+	Port         string
+	SMTPActive   bool
+	ReportEmails []string
+	SMTPURL      string
+	SMTPUser     string
+	SMTPPass     string
+	SenderEmail  string
+
+	Services []Service
 }
 
 type ServiceState struct {
@@ -42,21 +55,11 @@ type ResultState struct {
 	Time       time.Time
 }
 
-type Configuration struct {
-	CheckTime    int
-	MaxCheckTime int
-	Port         string
-	SMTPHost     string
-	SMTPPort     string
-	SenderEmail  string
-
-	Services []Service
-}
-
 type Service struct {
-	Active  bool
-	URL     string
-	Methode string
+	Active    bool
+	URL       string
+	Methode   string
+	Postparam map[string]string
 }
 
 func (a *App) Initialize() {
@@ -69,7 +72,6 @@ func (a *App) initializeRoutes() {
 
 	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
-	a.Router.HandleFunc("/echo", a.echo).Methods("GET")
 	a.Router.HandleFunc("/info", a.info).Methods("GET")
 	a.Router.HandleFunc("/api/states", a.states).Methods("GET")
 }
@@ -77,12 +79,6 @@ func (a *App) initializeRoutes() {
 func (a *App) Run(addr string) {
 	fmt.Println("Port: " + addr)
 	log.Fatal(http.ListenAndServe(addr, a.Router))
-}
-
-func (a *App) echo(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("Echo")
-	value := "Echo"
-	respondWithJSON(w, 200, map[string]string{"echo": value})
 }
 
 func (a *App) states(w http.ResponseWriter, r *http.Request) {

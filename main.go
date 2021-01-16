@@ -6,15 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
-
-	// logrus.SetOutput(os.Stdout)
-
-	logrus.SetLevel(logrus.InfoLevel)
 
 	fmt.Println("Starting ServiceChecker")
 	fmt.Println("Reading Config")
