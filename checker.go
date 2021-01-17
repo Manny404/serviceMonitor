@@ -33,12 +33,19 @@ func (a *App) InitializeChecker() {
 
 func (a *App) checkService(serviceState *ServiceState) {
 
+	firstrun := true
+
 	for {
 
 		waitTime := a.Conf.CheckTime + serviceState.ErrorCount
 
 		if waitTime > a.Conf.MaxCheckTime {
 			waitTime = a.Conf.MaxCheckTime
+		}
+
+		if firstrun {
+			firstrun = false
+			waitTime = 0
 		}
 
 		select {
@@ -61,12 +68,16 @@ func (a *App) check(serviceState *ServiceState) {
 	var resp *http.Response
 	var err error
 
+	client := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	if serviceState.Service.Methode == "POST" {
 		postBody, _ := json.Marshal(serviceState.Service.Postparam)
 		responseBody := bytes.NewBuffer(postBody)
-		resp, err = http.Post(serviceState.Service.URL, "application/json", responseBody)
+		resp, err = client.Post(serviceState.Service.URL, "application/json", responseBody)
 	} else {
-		resp, err = http.Get(serviceState.Service.URL)
+		resp, err = client.Get(serviceState.Service.URL)
 	}
 
 	if err != nil {

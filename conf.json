@@ -16,11 +16,11 @@
         },
         {
             "Active": true,
-            "URL": "https://www.google222222222.de",
+            "URL": "https://www.google.de",
             "Method": "GET"
         },
         {
-            "Active": true,
+            "Active": false,
             "URL": "https://www.google33.de",
             "Method": "POST",
             "Postparam": {

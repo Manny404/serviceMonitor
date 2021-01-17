@@ -16,13 +16,42 @@
     function update() {
 
         httpGetAsync("/api/states", function (response) {
-
             draw(JSON.parse(response))
-        });
+        },
+            function (error) {
+
+                // create header
+                var header = document.createElement("div");
+                header.classList.add("flex");
+                let kachel = document.createElement("div");
+                kachel.classList.add("kachel");
+                kachel.classList.add("kachelNOk");
+                kachel.classList.add("headerKachel");
+                kachel.append(document.createTextNode("ServiceMonitor returns an error"));
+                header.append(kachel);
+
+
+                var baseDiv = document.getElementById('data');
+                baseDiv.innerHTML = '';
+
+                baseDiv.append(header);
+            });
     }
     update();
 
     function draw(data) {
+
+        data.sort(function (a, b) {
+            if (a.Ok == b.Ok) {
+                return 0;
+            }
+
+            if (!a.Ok) {
+                return -1;
+            }
+
+            return 1;
+        });
 
         var holder = document.createElement("div");
         holder.classList.add("flex");
@@ -49,7 +78,7 @@
             kachel.setAttribute('title', 'HTTP-Code: ' + service.HTTPCode + ' Body: ' + service.Response);
 
             let row = document.createElement("div");
-            row.append(document.createTextNode(service.Service));
+            row.append(document.createTextNode(service.Service.substring(0, 35)));
             kachel.append(row);
 
             row = document.createElement("div");
@@ -64,22 +93,29 @@
             holder.append(kachel);
         }
 
+
         // create header
         var header = document.createElement("div");
         header.classList.add("flex");
-        let kachel = document.createElement("div");
-        kachel.classList.add("kachel");
-        kachel.classList.add("kachelOk");
-        kachel.classList.add("headerKachel");
-        kachel.append(document.createTextNode(servicesOk + "/" + services));
-        header.append(kachel);
+        let kachel = null;
 
-        kachel = document.createElement("div");
-        kachel.classList.add("kachel");
-        kachel.classList.add("kachelNOk");
-        kachel.classList.add("headerKachel");
-        kachel.append(document.createTextNode(servicesNok + "/" + services));
-        header.append(kachel);
+        if (servicesOk != 0) {
+            kachel = document.createElement("div");
+            kachel.classList.add("kachel");
+            kachel.classList.add("kachelOk");
+            kachel.classList.add("headerKachel");
+            kachel.append(document.createTextNode(servicesOk + "/" + services));
+            header.append(kachel);
+        }
+
+        if (servicesNok != 0) {
+            kachel = document.createElement("div");
+            kachel.classList.add("kachel");
+            kachel.classList.add("kachelNOk");
+            kachel.classList.add("headerKachel");
+            kachel.append(document.createTextNode(servicesNok + "/" + services));
+            header.append(kachel);
+        }
 
 
         var baseDiv = document.getElementById('data');
@@ -89,15 +125,14 @@
         baseDiv.append(holder);
     }
 
-
-
-
-    function httpGetAsync(theUrl, callback) {
+    function httpGetAsync(theUrl, callback, error) {
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function () {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
                 callback(xmlHttp.responseText);
+            }
         }
+        xmlHttp.onerror = error
         xmlHttp.open("GET", theUrl, true); // true for asynchronous 
         xmlHttp.send(null);
     }
