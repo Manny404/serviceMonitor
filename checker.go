@@ -68,13 +68,12 @@ func (a *App) check(serviceState *ServiceState) {
 
 	var resp *http.Response
 	var err error
-	tr := &http.Transport{
-        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-    }
+	customTransport := &(*http.DefaultTransport.(*http.Transport)) // make shallow copy
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := http.Client{
 		Timeout: 10 * time.Second,
-		Transport: tr,
+		Transport: customTransport,
 	}
 
 	if serviceState.Service.Methode == "POST" {
