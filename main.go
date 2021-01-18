@@ -20,6 +20,7 @@ func main() {
 	err := decoder.Decode(&configuration)
 	if err != nil {
 		fmt.Println("error Read Config:", err)
+		fmt.Println("Maybe conf.json not found")
 	} else {
 
 		a := App{}

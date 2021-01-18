@@ -1,4 +1,4 @@
-module serviceChecker
+module serviceMonitor
 
 require (
 	github.com/gorilla/mux v1.8.0

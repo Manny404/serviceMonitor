@@ -99,6 +99,10 @@ func (a *App) check(serviceState *ServiceState) {
 			state.Response = sb
 			state.Ok = true
 
+			if state.HTTPCode != 200 {
+				state.Ok = false
+			}
+
 			serviceState.ErrorCount = 0
 		}
 	}
@@ -123,17 +127,30 @@ func (a *App) sendEmail(state State, serviceState *ServiceState) {
 		return
 	}
 
-	auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
+	
 
-	// Here we do it all: connect to our server, set up a message and send it
-	to := a.Conf.ReportEmails
-	msg := []byte("To: \r\n" +
-		"Subject: Service " + serviceState.Service.URL + " has an error \r\n" +
-		"\r\n" +
-		"Service " + serviceState.Service.URL + " has an error. " + state.Response + " \r\n")
-	err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
-	if err != nil {
-		log.Println(err)
-	}
+	//for _, _ := range a.Conf.ReportEmails {
+		// Here we do it all: connect to our server, set up a message and send it
+		to := a.Conf.ReportEmails
+		msg := []byte("To: G111@hse.ag \r\n" +
+			"Subject: Service " + serviceState.Service.URL + " has an error \r\n" +
+			"\r\n" +
+			"Service " + serviceState.Service.URL + " has an error. " + state.Response + " \r\n")
+
+		if a.Conf.SMTPUser == "" {
+			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
+			err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	//}
+	
+	
 
 }

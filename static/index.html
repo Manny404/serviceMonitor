@@ -75,7 +75,7 @@
             }
             services++;
 
-            kachel.setAttribute('title', 'HTTP-Code: ' + service.HTTPCode + ' Body: ' + service.Response);
+            kachel.setAttribute('title', service.Service + ' HTTP-Code: ' + service.HTTPCode + ' Body: ' + service.Response);
 
             let row = document.createElement("div");
             row.append(document.createTextNode(service.Service.substring(0, 35)));

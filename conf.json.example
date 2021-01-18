@@ -3,11 +3,11 @@
     "MaxCheckTime": 120,
     "Port": "5000",
     "ReportEmails": [
-        "bla@chrku.de"
+        "chumax@gmx.de"
     ],
-    "SMTPActive": false,
-    "SMTPURL": "smtp.chrku.de",
-    "SenderEmail": "bla@chrku.de",
+    "SMTPActive": true,
+    "SMTPURL": "smtp.itrm.de",
+    "SenderEmail": "sender@example.mail",
     "Services": [
         {
             "Active": true,
