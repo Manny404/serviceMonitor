@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	fmt.Println("Starting ServiceChecker")
+	fmt.Println("Starting ServiceMonitor")
 	fmt.Println("Reading Config")
 
 	file, _ := os.Open("conf.json")
@@ -38,5 +38,5 @@ func main() {
 
 func sayRunning() {
 
-	fmt.Println("ServiceChecker running :)")
+	fmt.Println("ServiceMonitor running :)")
 }
