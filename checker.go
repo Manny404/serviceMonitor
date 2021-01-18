@@ -105,9 +105,10 @@ func (a *App) check(serviceState *ServiceState) {
 
 			if state.HTTPCode != 200 {
 				state.Ok = false
+			} else {
+				serviceState.ErrorCount = 0
 			}
-
-			serviceState.ErrorCount = 0
+			
 		}
 	}
 
