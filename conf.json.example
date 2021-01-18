@@ -3,7 +3,7 @@
     "MaxCheckTime": 120,
     "Port": "5000",
     "ReportEmails": [
-        "chumax@gmx.de"
+        "email@example.mail"
     ],
     "SMTPActive": true,
     "SMTPURL": "smtp.itrm.de",
