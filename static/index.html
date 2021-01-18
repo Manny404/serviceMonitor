@@ -75,10 +75,16 @@
             }
             services++;
 
-            kachel.setAttribute('title', service.Service + ' HTTP-Code: ' + service.HTTPCode + ' Body: ' + service.Response);
+            kachel.setAttribute('title', service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response);
 
             let row = document.createElement("div");
-            row.append(document.createTextNode(service.Service.substring(0, 35)));
+
+            let serviceName = service.Name
+            if (serviceName == '') {
+                serviceName = service.Service
+            }
+
+            row.append(document.createTextNode(serviceName));
             kachel.append(row);
 
             row = document.createElement("div");

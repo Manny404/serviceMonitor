@@ -48,6 +48,7 @@ type State struct {
 type ResultState struct {
 	Service    string
 	Ok         bool
+	Name       string
 	ErrorCount int
 	HTTPCode   int
 	Response   string
@@ -57,6 +58,7 @@ type ResultState struct {
 
 type Service struct {
 	Active    bool
+	Name      string
 	URL       string
 	Methode   string
 	Postparam map[string]string
@@ -94,6 +96,7 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 		state := serviceState.States[0]
 
 		result := ResultState{}
+		result.Name = serviceState.Service.Name
 		result.Service = serviceState.Service.URL
 		result.Ok = state.Ok
 		result.HTTPCode = state.HTTPCode

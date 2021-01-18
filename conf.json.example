@@ -11,16 +11,19 @@
     "Services": [
         {
             "Active": true,
+            "Name": "Google",
             "URL": "http://www.google.de",
             "Method": "GET"
         },
         {
             "Active": true,
+            "Name": "Google",
             "URL": "https://www.google.de",
             "Method": "GET"
         },
         {
             "Active": false,
+            "Name": "Google error",
             "URL": "https://www.google33.de",
             "Method": "POST",
             "Postparam": {

@@ -112,7 +112,7 @@ func (a *App) check(serviceState *ServiceState) {
 		}
 	}
 
-	if !state.Ok && serviceState.States[1].Ok {
+	if !state.Ok && !serviceState.States[1].Ok && serviceState.States[2].Ok {
 		a.sendEmail(state, serviceState)
 	}
 
