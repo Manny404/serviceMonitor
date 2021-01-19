@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/smtp"
 	"time"
@@ -51,7 +52,7 @@ func (a *App) checkService(serviceState *ServiceState) {
 
 		select {
 
-		case <-time.After(time.Duration(waitTime) * time.Second):
+		case <-time.After(time.Duration((waitTime*1000)+rand.Intn(1000)) * time.Millisecond):
 
 			a.check(serviceState)
 		}
@@ -72,7 +73,7 @@ func (a *App) check(serviceState *ServiceState) {
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := http.Client{
-		Timeout: 10 * time.Second,
+		Timeout:   10 * time.Second,
 		Transport: customTransport,
 	}
 
@@ -108,7 +109,7 @@ func (a *App) check(serviceState *ServiceState) {
 			} else {
 				serviceState.ErrorCount = 0
 			}
-			
+
 		}
 	}
 
@@ -132,30 +133,26 @@ func (a *App) sendEmail(state State, serviceState *ServiceState) {
 		return
 	}
 
-	
-
 	//for _, _ := range a.Conf.ReportEmails {
-		// Here we do it all: connect to our server, set up a message and send it
-		to := a.Conf.ReportEmails
-		msg := []byte("To: G111@hse.ag \r\n" +
-			"Subject: Service " + serviceState.Service.URL + " has an error \r\n" +
-			"\r\n" +
-			"Service " + serviceState.Service.URL + " has an error. " + state.Response + " \r\n")
+	// Here we do it all: connect to our server, set up a message and send it
+	to := a.Conf.ReportEmails
+	msg := []byte("To: G111@hse.ag \r\n" +
+		"Subject: Service " + serviceState.Service.URL + " has an error \r\n" +
+		"\r\n" +
+		"Service " + serviceState.Service.URL + " has an error. " + state.Response + " \r\n")
 
-		if a.Conf.SMTPUser == "" {
-			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
-			if err != nil {
-				log.Println(err)
-			}
-		} else {
-			auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
-			err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
-			if err != nil {
-				log.Println(err)
-			}
+	if a.Conf.SMTPUser == "" {
+		err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
+		if err != nil {
+			log.Println(err)
 		}
+	} else {
+		auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
+		err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 	//}
-	
-	
 
 }
