@@ -4,6 +4,7 @@
 
 <head>
     <link rel="stylesheet" href="style.css">
+    <link id="icon" rel="shortcut icon" type="image/x-icon" href="green.png">
 </head>
 
 
@@ -121,8 +122,11 @@
             kachel.classList.add("headerKachel");
             kachel.append(document.createTextNode(servicesNok + "/" + services));
             header.append(kachel);
+            document.getElementById('icon').setAttribute("href", "red.png");
         }
-
+        else {
+            document.getElementById('icon').setAttribute("href", "green.png");
+        }
 
         var baseDiv = document.getElementById('data');
         baseDiv.innerHTML = '';
