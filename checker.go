@@ -14,21 +14,30 @@ import (
 
 func (a *App) InitializeChecker() {
 
-	a.States = make([]*ServiceState, len(a.Conf.Services))
+	a.ServiceStateGroup = make([]*ServiceStateGroup, len(a.Conf.ServiceGroup))
 
-	for i, service := range a.Conf.Services {
+	for i, group := range a.Conf.ServiceGroup {
 
-		if !service.Active {
-			continue
+		serviceGroup := ServiceStateGroup{}
+		serviceGroup.Name = group.Name
+		serviceGroup.SortValue = group.SortValue
+		serviceGroup.Services = make([]*ServiceState, len(group.Services))
+		a.ServiceStateGroup[i] = &serviceGroup
+
+		for y, service := range group.Services {
+
+			if !service.Active {
+				continue
+			}
+
+			serviceState := ServiceState{}
+			serviceState.States = make([]State, 10)
+			serviceState.Service = service
+
+			serviceGroup.Services[y] = &serviceState
+
+			go a.checkService(&serviceState)
 		}
-
-		serviceState := ServiceState{}
-		serviceState.States = make([]State, 10)
-		serviceState.Service = service
-
-		a.States[i] = &serviceState
-
-		go a.checkService(&serviceState)
 	}
 
 }
@@ -128,6 +137,10 @@ func prependState(x []State, y State) []State {
 }
 
 func (a *App) sendEmail(state State, serviceState *ServiceState) {
+
+	if serviceState.Service.PreventNotify {
+		return
+	}
 
 	if !a.Conf.SMTPActive {
 		return

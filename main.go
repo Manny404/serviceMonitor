@@ -31,7 +31,7 @@ func main() {
 
 		go sayRunning()
 
-		a.Run(":" + configuration.Port)
+		a.Run(configuration.Port)
 
 	}
 }

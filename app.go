@@ -13,9 +13,9 @@ import (
 )
 
 type App struct {
-	Router *mux.Router
-	Conf   *Configuration
-	States []*ServiceState
+	Router            *mux.Router
+	Conf              *Configuration
+	ServiceStateGroup []*ServiceStateGroup
 }
 
 type Configuration struct {
@@ -29,7 +29,19 @@ type Configuration struct {
 	SMTPPass     string
 	SenderEmail  string
 
-	Services []Service
+	ServiceGroup []ServiceGroup
+}
+
+type ServiceGroup struct {
+	Services  []Service
+	Name      string
+	SortValue int
+}
+
+type ServiceStateGroup struct {
+	Services  []*ServiceState
+	Name      string
+	SortValue int
 }
 
 type ServiceState struct {
@@ -38,11 +50,30 @@ type ServiceState struct {
 	ErrorCount int
 }
 
+type Service struct {
+	Active        bool
+	PreventNotify bool
+	Name          string
+	URL           string
+	Methode       string
+	Postparam     map[string]string
+}
+
 type State struct {
 	Ok       bool
 	HTTPCode int
 	Response string
 	time     time.Time
+}
+
+type ResultGroup struct {
+	Services  []ResultState
+	Name      string
+	SortValue int
+}
+
+type Result struct {
+	Groups []ResultGroup
 }
 
 type ResultState struct {
@@ -54,14 +85,6 @@ type ResultState struct {
 	Response   string
 	LastOk     time.Time
 	Time       time.Time
-}
-
-type Service struct {
-	Active    bool
-	Name      string
-	URL       string
-	Methode   string
-	Postparam map[string]string
 }
 
 func (a *App) Initialize() {
@@ -80,35 +103,45 @@ func (a *App) initializeRoutes() {
 
 func (a *App) Run(addr string) {
 	fmt.Println("Port: " + addr)
-	log.Fatal(http.ListenAndServe(addr, a.Router))
+	log.Fatal(http.ListenAndServe(":"+addr, a.Router))
 }
 
 func (a *App) states(w http.ResponseWriter, r *http.Request) {
 
-	results := make([]ResultState, 0)
+	result := Result{}
+	result.Groups = make([]ResultGroup, 0)
 
-	for _, serviceState := range a.States {
+	for _, serviceStateGroup := range a.ServiceStateGroup {
 
-		if serviceState == nil || !serviceState.Service.Active {
-			continue
+		resultGroup := ResultGroup{}
+		resultGroup.Name = serviceStateGroup.Name
+		resultGroup.SortValue = serviceStateGroup.SortValue
+		resultGroup.Services = make([]ResultState, 0)
+
+		for _, serviceState := range serviceStateGroup.Services {
+
+			if serviceState == nil || !serviceState.Service.Active {
+				continue
+			}
+
+			state := serviceState.States[0]
+
+			result := ResultState{}
+			result.Name = serviceState.Service.Name
+			result.Service = serviceState.Service.URL
+			result.Ok = state.Ok
+			result.HTTPCode = state.HTTPCode
+			result.ErrorCount = serviceState.ErrorCount
+			result.Response = limitBody(state.Response)
+			result.Time = state.time
+			result.LastOk = findLastOk(serviceState.States)
+
+			resultGroup.Services = append(resultGroup.Services, result)
 		}
-
-		state := serviceState.States[0]
-
-		result := ResultState{}
-		result.Name = serviceState.Service.Name
-		result.Service = serviceState.Service.URL
-		result.Ok = state.Ok
-		result.HTTPCode = state.HTTPCode
-		result.ErrorCount = serviceState.ErrorCount
-		result.Response = limitBody(state.Response)
-		result.Time = state.time
-		result.LastOk = findLastOk(serviceState.States)
-
-		results = append(results, result)
+		result.Groups = append(result.Groups, resultGroup)
 	}
 
-	respondWithJSON(w, 200, results)
+	respondWithJSON(w, 200, result)
 }
 
 func limitBody(input string) string {

@@ -42,62 +42,103 @@
 
     function draw(data) {
 
-        data.sort(function (a, b) {
-            if (a.Ok == b.Ok) {
-                return a.Name.localeCompare(b.Name);
+        // Sort Groups
+        data.Groups.sort(function (a, b) {
+
+            const okA = groupHasNotOk(a.Services);
+            const okB = groupHasNotOk(b.Services);
+
+            if (okA == okB) {
+
+                if (a.SortValue == b.SortValue) {
+                    return a.Name.localeCompare(b.Name);
+                }
+
+                return a.SortValue - b.SortValue;
             }
 
-            if (!a.Ok) {
+            if (!okA) {
                 return -1;
             }
 
             return 1;
         });
 
+
+        // Sort Services in Groups
+        for (const group of data.Groups) {
+            group.Services.sort(function (a, b) {
+                if (a.Ok == b.Ok) {
+                    return a.Name.localeCompare(b.Name);
+                }
+
+                if (!a.Ok) {
+                    return -1;
+                }
+
+                return 1;
+            });
+        }
+
         var holder = document.createElement("div");
-        holder.classList.add("flex");
+        holder.classList.add("flexGroups");
 
 
         let services = 0;
         let servicesOk = 0;
         let servicesNok = 0;
 
-        for (const service of data) {
+        for (const group of data.Groups) {
 
-            // create Kachel
-            const kachel = document.createElement("div");
-            kachel.classList.add("kachel");
-            if (service.Ok) {
-                kachel.classList.add("kachelOk");
-                servicesOk++;
-            } else {
-                kachel.classList.add("kachelNOk");
-                servicesNok++;
+            var groupHolder = document.createElement("div");
+
+            var groupHeader = document.createElement("div")
+            groupHeader.classList.add("groupHeader");
+            groupHeader.append(document.createTextNode(group.Name));
+            groupHolder.append(groupHeader);
+
+            var groupFlexBox = document.createElement("div");
+            groupFlexBox.classList.add("flex");
+            groupHolder.append(groupFlexBox);
+
+            for (const service of group.Services) {
+
+                // create Kachel
+                const kachel = document.createElement("div");
+                kachel.classList.add("kachel");
+                if (service.Ok) {
+                    kachel.classList.add("kachelOk");
+                    servicesOk++;
+                } else {
+                    kachel.classList.add("kachelNOk");
+                    servicesNok++;
+                }
+                services++;
+
+                kachel.setAttribute('title', service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response);
+
+                let row = document.createElement("div");
+
+                let serviceName = service.Name
+                if (serviceName == '') {
+                    serviceName = service.Service
+                }
+
+                row.append(document.createTextNode(serviceName));
+                kachel.append(row);
+
+                row = document.createElement("div");
+                row.append(document.createTextNode("Fehler: " + service.ErrorCount));
+                kachel.append(row);
+
+                row = document.createElement("div");
+                row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
+                kachel.append(row);
+
+
+                groupFlexBox.append(kachel);
             }
-            services++;
-
-            kachel.setAttribute('title', service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response);
-
-            let row = document.createElement("div");
-
-            let serviceName = service.Name
-            if (serviceName == '') {
-                serviceName = service.Service
-            }
-
-            row.append(document.createTextNode(serviceName));
-            kachel.append(row);
-
-            row = document.createElement("div");
-            row.append(document.createTextNode("Fehler: " + service.ErrorCount));
-            kachel.append(row);
-
-            row = document.createElement("div");
-            row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
-            kachel.append(row);
-
-
-            holder.append(kachel);
+            holder.append(groupHolder);
         }
 
 
@@ -145,6 +186,18 @@
         xmlHttp.onerror = error
         xmlHttp.open("GET", theUrl, true); // true for asynchronous 
         xmlHttp.send(null);
+    }
+
+    function groupHasNotOk(services) {
+
+        for (const service of services) {
+
+            if (!service.Ok) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 </script>
