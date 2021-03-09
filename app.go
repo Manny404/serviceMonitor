@@ -132,7 +132,9 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 			result.Ok = state.Ok
 			result.HTTPCode = state.HTTPCode
 			result.ErrorCount = serviceState.ErrorCount
-			result.Response = limitBody(state.Response)
+			if !result.Ok {
+				result.Response = limitBody(state.Response)
+			}
 			result.Time = state.time
 			result.LastOk = findLastOk(serviceState.States)
 
