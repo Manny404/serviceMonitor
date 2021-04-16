@@ -34,13 +34,25 @@ type Configuration struct {
 
 type ServiceGroup struct {
 	Services  []Service
+	PlayAlarm bool
 	Name      string
 	SortValue int
+}
+
+type Service struct {
+	Active        bool
+	PreventNotify bool
+	PlayAlarm     bool
+	Name          string
+	URL           string
+	Methode       string
+	Postparam     map[string]string
 }
 
 type ServiceStateGroup struct {
 	Services  []*ServiceState
 	Name      string
+	PlayAlarm bool
 	SortValue int
 }
 
@@ -48,15 +60,6 @@ type ServiceState struct {
 	Service    Service
 	States     []State
 	ErrorCount int
-}
-
-type Service struct {
-	Active        bool
-	PreventNotify bool
-	Name          string
-	URL           string
-	Methode       string
-	Postparam     map[string]string
 }
 
 type State struct {
@@ -78,6 +81,7 @@ type Result struct {
 
 type ResultState struct {
 	Service    string
+	PlayAlarm  bool
 	Ok         bool
 	Name       string
 	ErrorCount int
@@ -129,6 +133,7 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 			result := ResultState{}
 			result.Name = serviceState.Service.Name
 			result.Service = serviceState.Service.URL
+			result.PlayAlarm = serviceState.Service.PlayAlarm || serviceStateGroup.PlayAlarm
 			result.Ok = state.Ok
 			result.HTTPCode = state.HTTPCode
 			result.ErrorCount = serviceState.ErrorCount

@@ -10,6 +10,8 @@
 
 <script>
 
+    const soundsPlayed = {};
+
     setInterval(function () {
         update();
     }, 5000);
@@ -36,6 +38,8 @@
                 baseDiv.innerHTML = '';
 
                 baseDiv.append(header);
+
+                document.getElementById('icon').setAttribute("href", "red.png");
             });
     }
     update();
@@ -108,12 +112,15 @@
                 kachel.classList.add("kachel");
                 if (service.Ok) {
                     kachel.classList.add("kachelOk");
+                    delete soundsPlayed[service.Service];
                     servicesOk++;
                 } else {
                     kachel.classList.add("kachelNOk");
                     servicesNok++;
                 }
                 services++;
+
+                playSound(service);
 
                 kachel.setAttribute('title', service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response);
 
@@ -200,6 +207,35 @@
         return true;
     }
 
+    function playSound(service) {
+
+        if (!service.PlayAlarm) {
+
+            return;
+        }
+
+        if (service.ErrorCount < 2) {
+            return;
+        }
+
+        if (soundsPlayed[service.Service]) {
+            return;
+        }
+
+        if (!document.getElementById('playAudio').checked) {
+            return;
+        }
+
+        const audio = new Audio('alarm.mp3');
+
+        audio.addEventListener("canplaythrough", event => {
+            audio.muted = false;
+            audio.play();
+        });
+
+        soundsPlayed[service.Service] = true;
+    }
+
 </script>
 
 
@@ -209,6 +245,11 @@
 
         <div>No Data</div>
 
+    </div>
+
+    <div>
+        <input type="checkbox" id="playAudio" name="playAudio">
+        <label for="playAudio">Audiowarnung</label>
     </div>
 </body>
 

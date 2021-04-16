@@ -20,6 +20,7 @@ func (a *App) InitializeChecker() {
 
 		serviceGroup := ServiceStateGroup{}
 		serviceGroup.Name = group.Name
+		serviceGroup.PlayAlarm = group.PlayAlarm
 		serviceGroup.SortValue = group.SortValue
 		serviceGroup.Services = make([]*ServiceState, len(group.Services))
 		a.ServiceStateGroup[i] = &serviceGroup
