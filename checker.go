@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -80,7 +79,7 @@ func (a *App) check(serviceState *ServiceState) {
 	var resp *http.Response
 	var err error
 	customTransport := &(*http.DefaultTransport.(*http.Transport)) // make shallow copy
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	//customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := http.Client{
 		Timeout:   10 * time.Second,
