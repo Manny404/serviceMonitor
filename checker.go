@@ -3,11 +3,15 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/smtp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -94,32 +98,17 @@ func (a *App) check(serviceState *ServiceState) {
 		resp, err = client.Get(serviceState.Service.URL)
 	}
 
+	var body string
+	body, err = parseResponse(resp, err, state, serviceState)
+
 	if err != nil {
-		log.Println(err)
+		state.Ok = false
 		state.Response = err.Error()
+
 	} else {
-
-		state.HTTPCode = resp.StatusCode
-		defer resp.Body.Close()
-		//We Read the response body on the line below.
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Println(err)
-			state.Response = err.Error()
-
-		} else {
-			//Convert the body to type string
-			sb := string(body)
-			state.Response = sb
-			state.Ok = true
-
-			if state.HTTPCode != 200 {
-				state.Ok = false
-			} else {
-				serviceState.ErrorCount = 0
-			}
-
-		}
+		state.Ok = true
+		state.Response = body
+		serviceState.ErrorCount = 0
 	}
 
 	if !state.Ok && !serviceState.States[1].Ok && serviceState.States[2].Ok {
@@ -127,6 +116,44 @@ func (a *App) check(serviceState *ServiceState) {
 	}
 
 	serviceState.States = prependState(serviceState.States, state)
+}
+
+func parseResponse(resp *http.Response, err error, state State, serviceState *ServiceState) (string, error) {
+
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if strings.HasPrefix(serviceState.Service.URL, "https") {
+		expiry := resp.TLS.PeerCertificates[0].NotAfter
+		// 4 weeks
+		in4Weeks := time.Now().AddDate(0, 0, 4)
+
+		if expiry.Before(in4Weeks) {
+			err = fmt.Errorf("Expiry warning: %v\n Issuer: %s\n", resp.TLS.PeerCertificates[0].Issuer, expiry.Format(time.RFC850))
+			return "", err
+		}
+	}
+
+	state.HTTPCode = resp.StatusCode
+
+	//We Read the response body on the line below.
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	if state.HTTPCode != 200 {
+		return "", errors.New("Http Statuscode invalid: " + strconv.Itoa(state.HTTPCode))
+	}
+
+	//Convert the body to type string
+	sb := string(body)
+
+	return sb, nil
 }
 
 func prependState(x []State, y State) []State {

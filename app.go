@@ -159,8 +159,8 @@ func limitBody(input string) string {
 		return ""
 	}
 
-	if cap > 200 {
-		cap = 200
+	if cap > 500 {
+		cap = 500
 	}
 
 	return input[:cap]
