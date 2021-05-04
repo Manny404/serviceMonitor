@@ -102,7 +102,8 @@ func (a *App) initializeRoutes() {
 	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	a.Router.HandleFunc("/info", a.info).Methods("GET")
-	a.Router.HandleFunc("/api/states", a.states).Methods("GET")
+	states := http.HandlerFunc(a.states)
+	a.Router.Handle("/api/states", Gzip(states)).Methods("GET")
 }
 
 func (a *App) Run(addr string) {
@@ -149,6 +150,7 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, 200, result)
+
 }
 
 func limitBody(input string) string {
