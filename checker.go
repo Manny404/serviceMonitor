@@ -99,7 +99,7 @@ func (a *App) check(serviceState *ServiceState) {
 	}
 
 	var body string
-	body, err = parseResponse(resp, err, state, serviceState)
+	body, err = parseResponse(resp, err, &state, serviceState)
 
 	if err != nil {
 		state.Ok = false
@@ -118,7 +118,7 @@ func (a *App) check(serviceState *ServiceState) {
 	serviceState.States = prependState(serviceState.States, state)
 }
 
-func parseResponse(resp *http.Response, err error, state State, serviceState *ServiceState) (string, error) {
+func parseResponse(resp *http.Response, err error, state *State, serviceState *ServiceState) (string, error) {
 
 	if err != nil {
 		log.Println(err)
