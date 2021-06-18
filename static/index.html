@@ -108,7 +108,9 @@
             for (const service of group.Services) {
 
                 // create Kachel
-                const kachel = document.createElement("div");
+                const kachel = document.createElement("a");
+                kachel.href = service.Service
+                kachel.target = "_blank"
                 kachel.classList.add("kachel");
                 if (service.Ok) {
                     kachel.classList.add("kachelOk");

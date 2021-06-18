@@ -28,6 +28,8 @@
     flex-grow: 1;
     min-width: 220px;
     width: 220px;
+    text-decoration: none;
+    color: black;
 }
 
 .headerKachel {
