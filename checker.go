@@ -184,12 +184,14 @@ func (a *App) sendEmail(state State, serviceState *ServiceState) {
 	if a.Conf.SMTPUser == "" {
 		err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
 		if err != nil {
+			log.Print("Email err:")
 			log.Println(err)
 		}
 	} else {
 		auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
 		err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
 		if err != nil {
+			log.Print("Email err:")
 			log.Println(err)
 		}
 	}
