@@ -93,9 +93,9 @@ func (a *App) check(serviceState *ServiceState) {
 	if serviceState.Service.Methode == "POST" {
 		postBody, _ := json.Marshal(serviceState.Service.Postparam)
 		responseBody := bytes.NewBuffer(postBody)
-		resp, err = client.Post(serviceState.Service.URL, "application/json", responseBody)
+		resp, err = client.Post(generateServiceURL(serviceState.Service), "application/json", responseBody)
 	} else {
-		resp, err = client.Get(serviceState.Service.URL)
+		resp, err = client.Get(generateServiceURL(serviceState.Service))
 	}
 
 	var body string
@@ -116,6 +116,21 @@ func (a *App) check(serviceState *ServiceState) {
 	}
 
 	serviceState.States = prependState(serviceState.States, state)
+}
+
+func generateServiceURL(service Service) string {
+
+	if service.HttpPass == "" || service.HttpUser == "" {
+		return service.URL
+	}
+
+	parts := strings.Split(service.URL, "//")
+
+	if len(parts) != 2 {
+		return service.URL
+	}
+
+	return parts[0] + "//" + service.HttpUser + ":" + service.HttpPass + "@" + parts[1]
 }
 
 func parseResponse(resp *http.Response, err error, state *State, serviceState *ServiceState) (string, error) {

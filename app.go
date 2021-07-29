@@ -46,6 +46,8 @@ type Service struct {
 	Name          string
 	URL           string
 	Methode       string
+	HttpUser      string
+	HttpPass      string
 	Postparam     map[string]string
 }
 
