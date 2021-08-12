@@ -90,7 +90,7 @@ type ResultState struct {
 	HTTPCode   int
 	Response   string
 	LastOk     time.Time
-	Time       time.Time
+	//Time       time.Time
 }
 
 func (a *App) Initialize() {
@@ -143,7 +143,7 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 			if !result.Ok {
 				result.Response = limitBody(state.Response)
 			}
-			result.Time = state.time
+			//result.Time = state.time
 			result.LastOk = findLastOk(serviceState.States)
 
 			resultGroup.Services = append(resultGroup.Services, result)
