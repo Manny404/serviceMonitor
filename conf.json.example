@@ -2,8 +2,15 @@
     "CheckTime": 5,
     "MaxCheckTime": 120,
     "Port": "5000",
-    "ReportEmails": [
-        "email@example.mail"
+     "ReportGroups": [
+        {
+            "GroupName": "TestGroup",
+            "Emails": [
+                "example@mail.example"
+            ],
+            "NeededErrors": 2,
+            "MinPriority": 1
+        }
     ],
     "SMTPActive": true,
     "SMTPURL": "smtp.itrm.de",
@@ -12,6 +19,7 @@
         {
             "Name": "Group 2",
             "SortValue": 2,
+            "Priority": 1,
             "Services": [{
                 "Active": true,
                 "Name": "Google",

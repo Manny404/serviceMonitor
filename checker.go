@@ -35,8 +35,12 @@ func (a *App) InitializeChecker() {
 			}
 
 			serviceState := ServiceState{}
-			serviceState.States = make([]State, 10)
+			serviceState.States = make([]State, 15)
 			serviceState.Service = service
+			serviceState.Priority = group.Priority
+			if service.Priority != 0 {
+				serviceState.Priority = service.Priority
+			}
 
 			serviceGroup.Services[y] = &serviceState
 
@@ -111,11 +115,24 @@ func (a *App) check(serviceState *ServiceState) {
 		serviceState.ErrorCount = 0
 	}
 
-	if !state.Ok && !serviceState.States[1].Ok && serviceState.States[2].Ok {
-		a.sendEmail(state, serviceState)
+	if !state.Ok { //&& !serviceState.States[1].Ok && serviceState.States[2].Ok {
+		a.sendEmail(state, serviceState, countErrors(serviceState))
 	}
 
 	serviceState.States = prependState(serviceState.States, state)
+}
+
+// return number of errors. -1 if all states are errors
+func countErrors(serviceState *ServiceState) int {
+	count := 0
+	for i := 1; i < len(serviceState.States); i++ {
+		if serviceState.States[i].Ok {
+			return count + 1
+		}
+		count++
+	}
+
+	return -1
 }
 
 func generateServiceURL(service Service) string {
@@ -173,12 +190,12 @@ func parseResponse(resp *http.Response, err error, state *State, serviceState *S
 
 func prependState(x []State, y State) []State {
 	//x = append(x, State{})
-	copy(x[1:9], x)
+	copy(x[1:14], x)
 	x[0] = y
 	return x
 }
 
-func (a *App) sendEmail(state State, serviceState *ServiceState) {
+func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int) {
 
 	if serviceState.Service.PreventNotify {
 		return
@@ -188,28 +205,36 @@ func (a *App) sendEmail(state State, serviceState *ServiceState) {
 		return
 	}
 
-	//for _, _ := range a.Conf.ReportEmails {
-	// Here we do it all: connect to our server, set up a message and send it
-	to := a.Conf.ReportEmails
-	msg := []byte("To: G111@hse.ag \r\n" +
-		"Subject: Service " + serviceState.Service.URL + " has an error \r\n" +
-		"\r\n" +
-		"Service " + serviceState.Service.URL + " has an error. " + state.Response + " \r\n")
+	for _, reportGroup := range a.Conf.ReportGroups {
 
-	if a.Conf.SMTPUser == "" {
-		err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
-		if err != nil {
-			log.Print("Email err:")
-			log.Println(err)
+		if errorCount != reportGroup.NeededErrors {
+			continue
 		}
-	} else {
-		auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, a.Conf.SMTPURL)
-		err := smtp.SendMail(a.Conf.SMTPURL, auth, a.Conf.SenderEmail, to, msg)
-		if err != nil {
-			log.Print("Email err:")
-			log.Println(err)
+
+		if reportGroup.MinPriority > serviceState.Priority {
+			continue
+		}
+
+		// Here we do it all: connect to our server, set up a message and send it
+		to := reportGroup.Emails
+		msg := []byte("To: " + a.Conf.SenderEmail + " \r\n" +
+			"Subject: Service " + serviceState.Service.Name + " has an error \r\n" +
+			"\r\n" +
+			"Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode))
+
+		if a.Conf.SMTPUser == "" {
+			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
+			if err != nil {
+				log.Print("Email err:")
+				log.Println(err)
+			}
+		} else {
+			//auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, strings.Split(a.Conf.SMTPURL, ":")[0])
+			err := smtp.SendMail(a.Conf.SMTPURL, LoginAuth(a.Conf.SMTPUser, a.Conf.SMTPPass), a.Conf.SenderEmail, to, msg)
+			if err != nil {
+				log.Print("Email err:")
+				log.Println(err)
+			}
 		}
 	}
-	//}
-
 }

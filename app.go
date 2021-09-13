@@ -23,7 +23,7 @@ type Configuration struct {
 	MaxCheckTime int
 	Port         string
 	SMTPActive   bool
-	ReportEmails []string
+	ReportGroups []ReportGroup
 	SMTPURL      string
 	SMTPUser     string
 	SMTPPass     string
@@ -35,6 +35,7 @@ type Configuration struct {
 type ServiceGroup struct {
 	Services  []Service
 	PlayAlarm bool
+	Priority  int
 	Name      string
 	SortValue int
 }
@@ -43,6 +44,7 @@ type Service struct {
 	Active        bool
 	PreventNotify bool
 	PlayAlarm     bool
+	Priority      int
 	Name          string
 	URL           string
 	Methode       string
@@ -62,6 +64,7 @@ type ServiceState struct {
 	Service    Service
 	States     []State
 	ErrorCount int
+	Priority   int
 }
 
 type State struct {
@@ -91,6 +94,13 @@ type ResultState struct {
 	Response   string
 	LastOk     time.Time
 	//Time       time.Time
+}
+
+type ReportGroup struct {
+	GroupName    string
+	Emails       []string
+	NeededErrors int
+	MinPriority  int
 }
 
 func (a *App) Initialize() {
