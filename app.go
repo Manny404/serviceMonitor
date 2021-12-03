@@ -17,6 +17,7 @@ type App struct {
 	Conf              *Configuration
 	ServiceStateGroup []*ServiceStateGroup
 	MaintenanceMode   bool
+	MaintenanceSetAt  int64
 }
 
 type Configuration struct {
@@ -106,6 +107,8 @@ type ReportGroup struct {
 }
 
 func (a *App) Initialize() {
+
+	go a.maintenanceReset()
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
@@ -198,6 +201,8 @@ func findLastOk(states []State) time.Time {
 }
 
 func (a *App) maintenance(w http.ResponseWriter, r *http.Request) {
+
+	a.MaintenanceSetAt = time.Now().Unix()
 	a.MaintenanceMode = !a.MaintenanceMode
 	respondWithJSON(w, 200, map[string]string{"result": "Ok"})
 }
@@ -215,4 +220,21 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
+}
+
+func (a *App) maintenanceReset() {
+
+	for {
+
+		select {
+
+		case <-time.After(time.Duration(60) * time.Second):
+
+			if a.MaintenanceMode && a.MaintenanceSetAt+(60*60) < time.Now().Unix() {
+				a.MaintenanceMode = false
+			}
+		}
+
+	}
+
 }
