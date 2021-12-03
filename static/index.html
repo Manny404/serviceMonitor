@@ -16,6 +16,16 @@
         update();
     }, 5000);
 
+    function setMaintenance() {
+
+        httpPostAsync("/api/maintenance", function (response) {
+            update();
+        },
+        function (error) {
+            console.log(error);
+        }, null);
+    }
+
     function update() {
 
         httpGetAsync("/api/states", function (response) {
@@ -85,6 +95,7 @@
         }
 
         var holder = document.createElement("div");
+
         holder.classList.add("flexGroups");
 
 
@@ -183,6 +194,25 @@
 
         baseDiv.append(header);
         baseDiv.append(holder);
+
+        var maintenance = document.createElement("div");
+        maintenance.classList.add("maintenanceArea")
+        baseDiv.append(maintenance);
+
+        if (data.MaintenanceMode) {
+            baseDiv.classList.add("maintenance")
+            maintenance.innerText = "Im Wartungmodus werden keine Benachrichtigungen versendet!"
+        } else {
+            baseDiv.classList.remove("maintenance")
+        }
+
+        var maintenanceBtn = document.createElement("div");
+        maintenanceBtn.innerText = "Wartungsmodus";
+        maintenanceBtn.classList.add("btn")
+        maintenanceBtn.classList.add("btn-default")
+        maintenanceBtn.classList.add("maintenanceBtn")
+        maintenanceBtn.addEventListener("click", setMaintenance);
+        maintenance.append(maintenanceBtn);
     }
 
     function httpGetAsync(theUrl, callback, error) {
@@ -195,6 +225,18 @@
         xmlHttp.onerror = error
         xmlHttp.open("GET", theUrl, true); // true for asynchronous 
         xmlHttp.send(null);
+    }
+
+    function httpPostAsync(theUrl, callback, error, data) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                callback(xmlHttp.responseText);
+            }
+        }
+        xmlHttp.onerror = error
+        xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+        xmlHttp.send(data);
     }
 
     function groupHasNotOk(services) {
@@ -249,7 +291,7 @@
 
     </div>
 
-    <div>
+    <div class="hidden">
         <input type="checkbox" id="playAudio" name="playAudio">
         <label for="playAudio">Audiowarnung</label>
     </div>

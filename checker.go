@@ -115,7 +115,7 @@ func (a *App) check(serviceState *ServiceState) {
 		serviceState.ErrorCount = 0
 	}
 
-	if !state.Ok { //&& !serviceState.States[1].Ok && serviceState.States[2].Ok {
+	if !state.Ok && !a.MaintenanceMode { //&& !serviceState.States[1].Ok && serviceState.States[2].Ok {
 		a.sendEmail(state, serviceState, countErrors(serviceState))
 	}
 

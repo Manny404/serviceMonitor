@@ -16,6 +16,7 @@ type App struct {
 	Router            *mux.Router
 	Conf              *Configuration
 	ServiceStateGroup []*ServiceStateGroup
+	MaintenanceMode   bool
 }
 
 type Configuration struct {
@@ -81,7 +82,8 @@ type ResultGroup struct {
 }
 
 type Result struct {
-	Groups []ResultGroup
+	Groups          []ResultGroup
+	MaintenanceMode bool
 }
 
 type ResultState struct {
@@ -114,6 +116,7 @@ func (a *App) initializeRoutes() {
 	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	a.Router.HandleFunc("/info", a.info).Methods("GET")
+	a.Router.HandleFunc("/api/maintenance", a.maintenance).Methods("POST")
 	states := http.HandlerFunc(a.states)
 	a.Router.Handle("/api/states", Gzip(states)).Methods("GET")
 }
@@ -127,6 +130,7 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 
 	result := Result{}
 	result.Groups = make([]ResultGroup, 0)
+	result.MaintenanceMode = a.MaintenanceMode
 
 	for _, serviceStateGroup := range a.ServiceStateGroup {
 
@@ -191,6 +195,11 @@ func findLastOk(states []State) time.Time {
 	}
 
 	return time.Time{}
+}
+
+func (a *App) maintenance(w http.ResponseWriter, r *http.Request) {
+	a.MaintenanceMode = !a.MaintenanceMode
+	respondWithJSON(w, 200, map[string]string{"result": "Ok"})
 }
 
 func (a *App) info(w http.ResponseWriter, r *http.Request) {
