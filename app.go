@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -18,6 +19,13 @@ type App struct {
 	ServiceStateGroup []*ServiceStateGroup
 	MaintenanceMode   bool
 	MaintenanceSetAt  int64
+	NotificationLog   map[string]*Notification
+	notificationLock  sync.Mutex
+}
+
+type Notification struct {
+	count   int
+	created int64
 }
 
 type Configuration struct {
@@ -212,9 +220,10 @@ func (a *App) info(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 200, map[string]string{"name": value})
 }
 
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
-}
+// func respondWithError(w http.ResponseWriter, code int, message string) {
+// 	respondWithJSON(w, code, map[string]string{"error": message})
+// }
+
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 	w.Header().Set("Content-Type", "application/json")

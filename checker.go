@@ -67,12 +67,9 @@ func (a *App) checkService(serviceState *ServiceState) {
 			waitTime = 0
 		}
 
-		select {
+		time.Sleep(time.Duration((waitTime*1000)+rand.Intn(1000)) * time.Millisecond)
 
-		case <-time.After(time.Duration((waitTime*1000)+rand.Intn(1000)) * time.Millisecond):
-
-			a.check(serviceState)
-		}
+		a.check(serviceState)
 	}
 }
 
@@ -86,7 +83,7 @@ func (a *App) check(serviceState *ServiceState) {
 
 	var resp *http.Response
 	var err error
-	customTransport := &(*http.DefaultTransport.(*http.Transport)) // make shallow copy
+	customTransport := http.DefaultTransport.(*http.Transport) // make shallow copy
 	//customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := http.Client{
@@ -164,7 +161,7 @@ func parseResponse(resp *http.Response, err error, state *State, serviceState *S
 		in4Weeks := time.Now().AddDate(0, 0, 4)
 
 		if expiry.Before(in4Weeks) {
-			err = fmt.Errorf("Expiry warning: %v\n Issuer: %s\n", resp.TLS.PeerCertificates[0].Issuer, expiry.Format(time.RFC850))
+			err = fmt.Errorf("expiry warning: %v\n issuer: %s", resp.TLS.PeerCertificates[0].Issuer, expiry.Format(time.RFC850))
 			return "", err
 		}
 	}
@@ -217,10 +214,27 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 
 		// Here we do it all: connect to our server, set up a message and send it
 		to := reportGroup.Emails
+
+		moreMessageFilteredInfo := ""
+
+		for i := 0; i < len(to); i++ {
+
+			var send = false
+			send, lastMessageBeforeFilter := a.filterNotificationReceiver(to[i])
+			if !send {
+				to = append(to[:i], to[i+1:]...)
+				i--
+			}
+
+			if lastMessageBeforeFilter {
+				moreMessageFilteredInfo = " More messages may be filtered!"
+			}
+		}
+
 		msg := []byte("To: " + a.Conf.SenderEmail + " \r\n" +
 			"Subject: Service " + serviceState.Service.Name + " has an error \r\n" +
 			"\r\n" +
-			"Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode))
+			"Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo)
 
 		if a.Conf.SMTPUser == "" {
 			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
@@ -237,4 +251,45 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 			}
 		}
 	}
+}
+
+/*
+	text
+*/
+func (a *App) filterNotificationReceiver(email string) (bool, bool) {
+
+	a.notificationLock.Lock()
+
+	notiLog, err := a.NotificationLog[email]
+
+	if err {
+
+		notiLog = &Notification{
+			created: time.Now().Unix(),
+		}
+
+		a.NotificationLog[email] = notiLog
+	}
+
+	if notiLog.created > time.Now().Unix()+(60*30) {
+		notiLog.created = time.Now().Unix()
+		notiLog.count = 0
+	}
+
+	notiLog.count++
+
+	a.notificationLock.Unlock()
+
+	// last send message
+	if notiLog.count == 5 {
+		return true, true
+	}
+
+	// filtered out
+	if notiLog.count > 5 {
+		return false, false
+	}
+
+	// nomral send
+	return true, false
 }
