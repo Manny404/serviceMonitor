@@ -231,6 +231,10 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 			}
 		}
 
+		if len(to) == 0 {
+			return
+		}
+
 		msg := []byte("To: " + a.Conf.SenderEmail + " \r\n" +
 			"Subject: Service " + serviceState.Service.Name + " has an error \r\n" +
 			"\r\n" +
@@ -262,7 +266,7 @@ func (a *App) filterNotificationReceiver(email string) (bool, bool) {
 
 	notiLog, err := a.NotificationLog[email]
 
-	if err {
+	if !err {
 
 		notiLog = &Notification{
 			created: time.Now().Unix(),
@@ -271,7 +275,7 @@ func (a *App) filterNotificationReceiver(email string) (bool, bool) {
 		a.NotificationLog[email] = notiLog
 	}
 
-	if notiLog.created > time.Now().Unix()+(60*30) {
+	if notiLog.created+(60*60) < time.Now().Unix() {
 		notiLog.created = time.Now().Unix()
 		notiLog.count = 0
 	}

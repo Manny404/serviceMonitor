@@ -23,7 +23,9 @@ func main() {
 		fmt.Println("Maybe conf.json not found")
 	} else {
 
-		a := App{}
+		a := App{
+			NotificationLog: make(map[string]*Notification),
+		}
 		a.Conf = &configuration
 
 		a.Initialize()
