@@ -57,6 +57,7 @@ type Service struct {
 	Priority      int
 	Name          string
 	URL           string
+	KnownBroken   bool
 	Methode       string
 	HttpUser      string
 	HttpPass      string
@@ -98,7 +99,7 @@ type Result struct {
 type ResultState struct {
 	Service    string
 	PlayAlarm  bool
-	Ok         bool
+	State      ReturnState
 	Name       string
 	ErrorCount int
 	HTTPCode   int
@@ -106,6 +107,14 @@ type ResultState struct {
 	LastOk     time.Time
 	//Time       time.Time
 }
+
+type ReturnState string
+
+const (
+	OK    ReturnState = "OK"
+	WARN  ReturnState = "WARN"
+	ERROR ReturnState = "ERROR"
+)
 
 type ReportGroup struct {
 	GroupName    string
@@ -162,10 +171,18 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 			result.Name = serviceState.Service.Name
 			result.Service = serviceState.Service.URL
 			result.PlayAlarm = serviceState.Service.PlayAlarm || serviceStateGroup.PlayAlarm
-			result.Ok = state.Ok
+
+			if state.Ok {
+				result.State = OK
+			} else if serviceState.Service.KnownBroken {
+				result.State = WARN
+			} else {
+				result.State = ERROR
+			}
+
 			result.HTTPCode = state.HTTPCode
 			result.ErrorCount = serviceState.ErrorCount
-			if !result.Ok {
+			if result.State == ERROR {
 				result.Response = limitBody(state.Response)
 			}
 			//result.Time = state.time
