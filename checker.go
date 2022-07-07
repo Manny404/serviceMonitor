@@ -19,11 +19,12 @@ func (a *App) InitializeChecker() {
 
 	a.ServiceStateGroup = make([]*ServiceStateGroup, len(a.Conf.ServiceGroup))
 
+	nextServiceId := 1
+
 	for i, group := range a.Conf.ServiceGroup {
 
 		serviceGroup := ServiceStateGroup{}
 		serviceGroup.Name = group.Name
-		serviceGroup.PlayAlarm = group.PlayAlarm
 		serviceGroup.SortValue = group.SortValue
 		serviceGroup.Services = make([]*ServiceState, len(group.Services))
 		a.ServiceStateGroup[i] = &serviceGroup
@@ -35,6 +36,8 @@ func (a *App) InitializeChecker() {
 			}
 
 			serviceState := ServiceState{}
+			serviceState.Id = nextServiceId
+			nextServiceId++
 			serviceState.States = make([]State, 15)
 			serviceState.Service = service
 			serviceState.Priority = group.Priority
@@ -112,7 +115,7 @@ func (a *App) check(serviceState *ServiceState) {
 		serviceState.ErrorCount = 0
 	}
 
-	if !state.Ok && !a.MaintenanceMode { //&& !serviceState.States[1].Ok && serviceState.States[2].Ok {
+	if !state.Ok && !a.MaintenanceMode && !serviceState.MarkedBroken && !serviceState.Service.KnownBroken {
 		a.sendEmail(state, serviceState, countErrors(serviceState))
 	}
 

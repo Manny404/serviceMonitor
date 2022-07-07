@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -44,7 +45,6 @@ type Configuration struct {
 
 type ServiceGroup struct {
 	Services  []Service
-	PlayAlarm bool
 	Priority  int
 	Name      string
 	SortValue int
@@ -53,7 +53,6 @@ type ServiceGroup struct {
 type Service struct {
 	Active        bool
 	PreventNotify bool
-	PlayAlarm     bool
 	Priority      int
 	Name          string
 	URL           string
@@ -67,15 +66,16 @@ type Service struct {
 type ServiceStateGroup struct {
 	Services  []*ServiceState
 	Name      string
-	PlayAlarm bool
 	SortValue int
 }
 
 type ServiceState struct {
-	Service    Service
-	States     []State
-	ErrorCount int
-	Priority   int
+	Id           int
+	Service      Service
+	States       []State
+	ErrorCount   int
+	Priority     int
+	MarkedBroken bool
 }
 
 type State struct {
@@ -97,8 +97,8 @@ type Result struct {
 }
 
 type ResultState struct {
+	Id         int
 	Service    string
-	PlayAlarm  bool
 	State      ReturnState
 	Name       string
 	ErrorCount int
@@ -133,12 +133,14 @@ func (a *App) Initialize() {
 
 func (a *App) initializeRoutes() {
 
-	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-
 	a.Router.HandleFunc("/info", a.info).Methods("GET")
 	a.Router.HandleFunc("/api/maintenance", a.maintenance).Methods("POST")
 	states := http.HandlerFunc(a.states)
 	a.Router.Handle("/api/states", Gzip(states)).Methods("GET")
+	a.Router.HandleFunc("/api/markBroken", a.markBroken).Methods("POST")
+
+	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	a.Router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 }
 
 func (a *App) Run(addr string) {
@@ -168,13 +170,14 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 			state := serviceState.States[0]
 
 			result := ResultState{}
+			result.Id = serviceState.Id
 			result.Name = serviceState.Service.Name
 			result.Service = serviceState.Service.URL
-			result.PlayAlarm = serviceState.Service.PlayAlarm || serviceStateGroup.PlayAlarm
 
 			if state.Ok {
 				result.State = OK
-			} else if serviceState.Service.KnownBroken {
+				serviceState.MarkedBroken = false
+			} else if serviceState.Service.KnownBroken || serviceState.MarkedBroken {
 				result.State = WARN
 			} else {
 				result.State = ERROR
@@ -223,6 +226,32 @@ func findLastOk(states []State) time.Time {
 	}
 
 	return time.Time{}
+}
+
+func (a *App) markBroken(w http.ResponseWriter, r *http.Request) {
+
+	idS, ok := r.URL.Query()["id"]
+	if !ok {
+		respondWithJSON(w, 400, map[string]string{"result": "MissingId"})
+	}
+
+	id, err := strconv.Atoi(idS[0])
+	if err != nil || id < 0 {
+		respondWithJSON(w, 400, map[string]string{"result": "id ist not a number"})
+	}
+
+	for _, group := range a.ServiceStateGroup {
+
+		for _, service := range group.Services {
+
+			if service.Id == id {
+
+				service.MarkedBroken = !service.MarkedBroken
+			}
+		}
+	}
+
+	respondWithJSON(w, 200, map[string]string{"result": "Ok"})
 }
 
 func (a *App) maintenance(w http.ResponseWriter, r *http.Request) {

@@ -23,7 +23,6 @@
             "Services": [{
                 "Active": true,
                 "Name": "Google",
-                "PlayAlarm": true
                 "URL": "http://www.google.de",
                 "Method": "GET"
             },
@@ -46,7 +45,6 @@
         {
             "Name": "Group 1",
             "SortValue": 1,
-            "PlayAlarm": true,
             "Services": [
                 {
                     "Active": true,
