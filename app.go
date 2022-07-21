@@ -244,7 +244,7 @@ func (a *App) markBroken(w http.ResponseWriter, r *http.Request) {
 
 		for _, service := range group.Services {
 
-			if service.Id == id {
+			if service != nil && service.Id == id {
 
 				service.MarkedBroken = !service.MarkedBroken
 			}
