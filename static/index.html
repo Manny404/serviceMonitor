@@ -16,31 +16,34 @@
 
     function setMaintenance() {
 
-        httpPostAsync("/api/maintenance", function (response) {
-            update();
-        },
-        function (error) {
-            console.log(error);
-        }, null);
+        httpPostAsync("/api/maintenance",
+            function (response) {
+                update();
+            },
+            function (error) {
+                console.log(error);
+            }, null);
     }
 
     function markBroken(event, id) {
 
         event.preventDefault();
 
-        httpPostAsync("/api/markBroken?id=" + id, function (response) {
-            update();
-        },
-        function (error) {
-            console.log(error);
-        }, null);
+        httpPostAsync("/api/markBroken?id=" + id,
+            function (response) {
+                update();
+            },
+            function (error) {
+                console.log(error);
+            }, null);
     }
 
     function update() {
 
-        httpGetAsync("/api/states", function (response) {
-            draw(JSON.parse(response))
-        },
+        httpGetAsync("/api/states",
+            function (response) {
+                draw(JSON.parse(response))
+            },
             function (error) {
 
                 // create header
@@ -146,7 +149,7 @@
                 }
                 services++;
 
-                kachel.addEventListener("contextmenu", function(event) { markBroken(event, service.Id)}, false);
+                kachel.addEventListener("contextmenu", function (event) { markBroken(event, service.Id) }, false);
 
                 kachel.setAttribute('title', service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response);
 
