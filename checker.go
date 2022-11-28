@@ -160,10 +160,10 @@ func parseResponse(resp *http.Response, err error, state *State, serviceState *S
 
 	if strings.HasPrefix(serviceState.Service.URL, "https") {
 		expiry := resp.TLS.PeerCertificates[0].NotAfter
-		// 4 weeks
-		in4Weeks := time.Now().AddDate(0, 0, 4)
+		// 10 days
+		in10days := time.Now().AddDate(0, 0, 10)
 
-		if expiry.Before(in4Weeks) {
+		if expiry.Before(in10days) {
 			err = fmt.Errorf("expiry warning: %v\n issuer: %s", resp.TLS.PeerCertificates[0].Issuer, expiry.Format(time.RFC850))
 			return "", err
 		}
@@ -243,6 +243,7 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 			"\r\n" +
 			"Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo)
 
+		log.Println("Sende Email " + a.Conf.SenderEmail)
 		if a.Conf.SMTPUser == "" {
 			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
 			if err != nil {
@@ -261,7 +262,7 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 }
 
 /*
-	text
+text
 */
 func (a *App) filterNotificationReceiver(email string) (bool, bool) {
 
