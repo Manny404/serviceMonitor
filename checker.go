@@ -90,7 +90,7 @@ func (a *App) check(serviceState *ServiceState) {
 	//customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := http.Client{
-		Timeout:   10 * time.Second,
+		Timeout:   5 * time.Second,
 		Transport: customTransport,
 	}
 
