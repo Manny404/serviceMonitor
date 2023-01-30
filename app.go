@@ -164,8 +164,8 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 
 	result := Result{}
 
-	fmt.Println(params["lastStateFrom"])
-	fmt.Println(a.StateLog[0].Time)
+	//fmt.Println(params["lastStateFrom"])
+	//fmt.Println(a.StateLog[0].Time)
 	if params["lastStateFrom"] == a.StateLog[0].Time {
 
 		respondWithJSON(w, 201, result)
