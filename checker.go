@@ -122,7 +122,8 @@ func (a *App) check(serviceState *ServiceState) {
 	if serviceState.States[0].Ok != state.Ok {
 		logEntry := StateLogEntry{}
 		logEntry.Name = serviceState.Service.Name
-		logEntry.Time = time.Now().Format(time.RFC3339)
+		timeParts := strings.Split(time.Now().String(), " ")
+		logEntry.Time = timeParts[0] + "T" + timeParts[1]
 		logEntry.Ok = state.Ok
 		if !state.Ok {
 			logEntry.HTTPCode = state.HTTPCode
