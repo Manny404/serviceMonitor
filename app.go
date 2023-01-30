@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -269,6 +270,16 @@ func (a *App) markBroken(w http.ResponseWriter, r *http.Request) {
 			if service != nil && service.Id == id {
 
 				service.MarkedBroken = !service.MarkedBroken
+
+				logEntry := StateLogEntry{}
+				logEntry.Name = service.Service.Name
+				timeParts := strings.Split(time.Now().String(), " ")
+				logEntry.Time = timeParts[0] + "T" + timeParts[1]
+				logEntry.Ok = false
+				logEntry.HTTPCode = 0
+				logEntry.Response = "Mark as broken"
+				a.StateLog = prepend(a.StateLog, logEntry)
+
 			}
 		}
 	}

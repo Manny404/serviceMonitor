@@ -313,7 +313,7 @@
 
             const reponse = document.createElement("td");
             if (!logEntry.Ok) {
-                reponse.innerText = logEntry.HTTPCode + ' ' + logEntry.response;
+                reponse.innerText = logEntry.HTTPCode != 0 ? logEntry.HTTPCode : 0 + ' ' + logEntry.Response;
             }
             row.append(reponse);
         }
