@@ -22,6 +22,15 @@ type App struct {
 	MaintenanceSetAt  int64
 	NotificationLog   map[string]*Notification
 	notificationLock  sync.Mutex
+	StateLog          []StateLogEntry
+}
+
+type StateLogEntry struct {
+	Name     string
+	Ok       bool
+	HTTPCode int
+	Response string
+	Time     string
 }
 
 type Notification struct {
@@ -93,6 +102,7 @@ type ResultGroup struct {
 
 type Result struct {
 	Groups          []ResultGroup
+	StateLog        []StateLogEntry
 	MaintenanceMode bool
 }
 
@@ -136,7 +146,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/info", a.info).Methods("GET")
 	a.Router.HandleFunc("/api/maintenance", a.maintenance).Methods("POST")
 	states := http.HandlerFunc(a.states)
-	a.Router.Handle("/api/states", Gzip(states)).Methods("GET")
+	a.Router.Handle("/api/states", Gzip(states)).Queries("lastStateFrom", "{lastStateFrom}").Methods("GET")
 	a.Router.HandleFunc("/api/markBroken", a.markBroken).Methods("POST")
 
 	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
@@ -150,7 +160,19 @@ func (a *App) Run(addr string) {
 
 func (a *App) states(w http.ResponseWriter, r *http.Request) {
 
+	params := mux.Vars(r)
+
 	result := Result{}
+
+	fmt.Println(params["lastStateFrom"])
+	fmt.Println(a.StateLog[0].Time)
+	if params["lastStateFrom"] == a.StateLog[0].Time {
+
+		respondWithJSON(w, 201, result)
+		return
+	}
+
+	result.StateLog = a.StateLog
 	result.Groups = make([]ResultGroup, 0)
 	result.MaintenanceMode = a.MaintenanceMode
 
@@ -281,13 +303,10 @@ func (a *App) maintenanceReset() {
 
 	for {
 
-		select {
+		<-time.After(time.Duration(60) * time.Second)
 
-		case <-time.After(time.Duration(60) * time.Second):
-
-			if a.MaintenanceMode && a.MaintenanceSetAt+(60*60) < time.Now().Unix() {
-				a.MaintenanceMode = false
-			}
+		if a.MaintenanceMode && a.MaintenanceSetAt+(60*60) < time.Now().Unix() {
+			a.MaintenanceMode = false
 		}
 
 	}

@@ -10,6 +10,8 @@
 
 <script>
 
+    var lastStateChange = "!";
+
     setInterval(function () {
         update();
     }, 5000);
@@ -40,9 +42,16 @@
 
     function update() {
 
-        httpGetAsync("/api/states",
-            function (response) {
-                draw(JSON.parse(response))
+        httpGetAsync("/api/states?lastStateFrom=" + encodeURIComponent(lastStateChange),
+            function (response, httpCode) {
+
+                if (httpCode == 201) {
+                    return;
+                }
+
+                const data = JSON.parse(response);
+                lastStateChange = data.StateLog[0].Time
+                draw(data)
             },
             function (error) {
 
@@ -168,7 +177,9 @@
                 kachel.append(row);
 
                 row = document.createElement("div");
-                row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
+                if (service.State != 'OK') {
+                    row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
+                }
                 kachel.append(row);
 
 
@@ -238,13 +249,82 @@
         maintenanceBtn.classList.add("maintenanceBtn")
         maintenanceBtn.addEventListener("click", setMaintenance);
         maintenance.append(maintenanceBtn);
+
+        drawLogTable(baseDiv, data);
+    }
+
+    function drawLogTable(baseDiv, data) {
+
+        const logArea = document.createElement("div");
+        logArea.classList.add("logArea")
+        baseDiv.append(logArea);
+
+
+        const h2 = document.createElement("h2");
+        h2.innerText = "StateLog";
+        //h2.classList.add("");
+        logArea.append(h2);
+
+
+        const table = document.createElement("table");
+        table.classList.add("table");
+        table.classList.add("table-striped");
+        logArea.append(table);
+
+        const tableHead = document.createElement("tr");
+        table.append(tableHead);
+
+        const headName = document.createElement("th");
+        headName.innerText = "Name";
+        tableHead.append(headName);
+
+        const headState = document.createElement("th");
+        headState.innerText = "State";
+        tableHead.append(headState);
+
+        const headTime = document.createElement("th");
+        headTime.innerText = "Time";
+        tableHead.append(headTime);
+
+        const headResponse = document.createElement("th");
+        headResponse.innerText = "Response";
+        tableHead.append(headResponse);
+
+        for (const logEntry of data.StateLog) {
+
+            if (logEntry.Name == '') {
+                continue;
+            }
+
+            const row = document.createElement("tr");
+            table.append(row);
+
+            const name = document.createElement("td");
+            name.innerText = logEntry.Name;
+            row.append(name);
+
+            const state = document.createElement("td");
+            state.innerText = logEntry.Ok;
+            row.append(state);
+
+            const time = document.createElement("td");
+            time.innerText = new Date(logEntry.Time).toLocaleString("de-DE");;
+            row.append(time);
+
+            const reponse = document.createElement("td");
+            if (!logEntry.Ok) {
+                reponse.innerText = logEntry.HTTPCode + ' ' + logEntry.response;
+            }
+            row.append(reponse);
+        }
+
     }
 
     function httpGetAsync(theUrl, callback, error) {
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function () {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-                callback(xmlHttp.responseText);
+            if (xmlHttp.readyState == 4 && (xmlHttp.status == 200 || xmlHttp.status == 201)) {
+                callback(xmlHttp.responseText, xmlHttp.status);
             }
         }
         xmlHttp.onerror = error

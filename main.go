@@ -25,6 +25,7 @@ func main() {
 
 		a := App{
 			NotificationLog: make(map[string]*Notification),
+			StateLog:        make([]StateLogEntry, 100),
 		}
 		a.Conf = &configuration
 

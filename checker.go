@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -119,7 +119,20 @@ func (a *App) check(serviceState *ServiceState) {
 		a.sendEmail(state, serviceState, countErrors(serviceState))
 	}
 
-	serviceState.States = prependState(serviceState.States, state)
+	if serviceState.States[0].Ok != state.Ok {
+		logEntry := StateLogEntry{}
+		logEntry.Name = serviceState.Service.Name
+		logEntry.Time = time.Now().Format(time.RFC3339)
+		logEntry.Ok = state.Ok
+		if !state.Ok {
+			logEntry.HTTPCode = state.HTTPCode
+			logEntry.Response = state.Response
+		}
+
+		a.StateLog = prepend(a.StateLog, logEntry)
+	}
+
+	serviceState.States = prepend(serviceState.States, state)
 }
 
 // return number of errors. -1 if all states are errors
@@ -172,7 +185,7 @@ func parseResponse(resp *http.Response, err error, state *State, serviceState *S
 	state.HTTPCode = resp.StatusCode
 
 	//We Read the response body on the line below.
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -188,9 +201,16 @@ func parseResponse(resp *http.Response, err error, state *State, serviceState *S
 	return sb, nil
 }
 
-func prependState(x []State, y State) []State {
+// func prependState(x []State, y State) []State {
+// 	//x = append(x, State{})
+// 	copy(x[1:14], x)
+// 	x[0] = y
+// 	return x
+// }
+
+func prepend[T any](x []T, y T) []T {
 	//x = append(x, State{})
-	copy(x[1:14], x)
+	copy(x[1:len(x)-1], x)
 	x[0] = y
 	return x
 }

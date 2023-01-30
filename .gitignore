@@ -3,3 +3,4 @@ config.json
 conf.json
 serviceMonitor.exe
 serviceMonitor
+__debug_bin.exe
