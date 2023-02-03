@@ -120,6 +120,7 @@ func (a *App) check(serviceState *ServiceState) {
 	}
 
 	if serviceState.States[0].Ok != state.Ok {
+		log.Println("Statechange " + serviceState.Service.Name + " " + strconv.FormatBool(state.Ok))
 		logEntry := StateLogEntry{}
 		logEntry.Name = serviceState.Service.Name
 		timeParts := strings.Split(time.Now().String(), " ")
@@ -266,7 +267,7 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 			"\r\n" +
 			"Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo)
 
-		log.Println("Sende Email " + a.Conf.SenderEmail)
+		log.Println("Sende Email " + strings.Join(to, ",") + " " + serviceState.Service.Name)
 		if a.Conf.SMTPUser == "" {
 			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
 			if err != nil {
