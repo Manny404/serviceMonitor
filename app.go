@@ -24,6 +24,7 @@ type App struct {
 	NotificationLog   map[string]*Notification
 	notificationLock  sync.Mutex
 	StateLog          []StateLogEntry
+	stateLogMutex     sync.Mutex
 }
 
 type StateLogEntry struct {

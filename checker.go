@@ -130,7 +130,9 @@ func (a *App) check(serviceState *ServiceState) {
 			logEntry.Response = state.Response
 		}
 
+		a.stateLogMutex.Lock()
 		a.StateLog = prepend(a.StateLog, logEntry)
+		defer a.stateLogMutex.Unlock()
 	}
 
 	serviceState.States = prepend(serviceState.States, state)
