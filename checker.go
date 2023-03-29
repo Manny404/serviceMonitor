@@ -133,6 +133,7 @@ func (a *App) check(serviceState *ServiceState) {
 
 		a.stateLogMutex.Lock()
 		a.StateLog = prepend(a.StateLog, logEntry)
+		a.Cache = rand.Int31()
 		defer a.stateLogMutex.Unlock()
 	}
 

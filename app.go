@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,6 +26,7 @@ type App struct {
 	notificationLock  sync.Mutex
 	StateLog          []StateLogEntry
 	stateLogMutex     sync.Mutex
+	Cache             int32
 }
 
 type StateLogEntry struct {
@@ -106,6 +108,7 @@ type Result struct {
 	Groups          []ResultGroup
 	StateLog        []StateLogEntry
 	MaintenanceMode bool
+	Cache           int32
 }
 
 type ResultState struct {
@@ -145,10 +148,9 @@ func (a *App) Initialize() {
 
 func (a *App) initializeRoutes() {
 
-	a.Router.HandleFunc("/info", a.info).Methods("GET")
 	a.Router.HandleFunc("/api/maintenance", a.maintenance).Methods("POST")
 	states := http.HandlerFunc(a.states)
-	a.Router.Handle("/api/states", Gzip(states)).Queries("lastStateFrom", "{lastStateFrom}").Methods("GET")
+	a.Router.Handle("/api/states", Gzip(states)).Queries("cache", "{cache}").Methods("GET")
 	a.Router.HandleFunc("/api/markBroken", a.markBroken).Methods("POST")
 
 	a.Router.PathPrefix("/static").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
@@ -168,15 +170,18 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Println(params["lastStateFrom"])
 	//fmt.Println(a.StateLog[0].Time)
-	if params["lastStateFrom"] == a.StateLog[0].Time {
+	inCache, _ := strconv.ParseInt(params["cache"], 10, 32)
 
-		respondWithJSON(w, 201, result)
+	if int32(inCache) == a.Cache {
+
+		respondWithJSON(w, 201, "OK")
 		return
 	}
 
 	result.StateLog = a.StateLog
 	result.Groups = make([]ResultGroup, 0)
 	result.MaintenanceMode = a.MaintenanceMode
+	result.Cache = a.Cache
 
 	for _, serviceStateGroup := range a.ServiceStateGroup {
 
@@ -285,6 +290,8 @@ func (a *App) markBroken(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	a.Cache = rand.Int31()
+
 	respondWithJSON(w, 200, map[string]string{"result": "Ok"})
 }
 
@@ -292,17 +299,9 @@ func (a *App) maintenance(w http.ResponseWriter, r *http.Request) {
 
 	a.MaintenanceSetAt = time.Now().Unix()
 	a.MaintenanceMode = !a.MaintenanceMode
+	a.Cache = rand.Int31()
 	respondWithJSON(w, 200, map[string]string{"result": "Ok"})
 }
-
-func (a *App) info(w http.ResponseWriter, r *http.Request) {
-	value := "usersettings"
-	respondWithJSON(w, 200, map[string]string{"name": value})
-}
-
-// func respondWithError(w http.ResponseWriter, code int, message string) {
-// 	respondWithJSON(w, code, map[string]string{"error": message})
-// }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)

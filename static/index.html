@@ -10,7 +10,7 @@
 
 <script>
 
-    var lastStateChange = "!";
+    var cache = 0;
 
     setInterval(function () {
         update();
@@ -42,7 +42,7 @@
 
     function update() {
 
-        httpGetAsync("/api/states?lastStateFrom=" + encodeURIComponent(lastStateChange),
+        httpGetAsync("/api/states?cache=" + encodeURIComponent(cache),
             function (response, httpCode) {
 
                 if (httpCode == 201) {
@@ -50,7 +50,7 @@
                 }
 
                 const data = JSON.parse(response);
-                lastStateChange = data.StateLog[0].Time
+                cache = data.Cache
                 draw(data)
             },
             function (error) {
