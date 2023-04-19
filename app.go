@@ -89,6 +89,7 @@ type ServiceState struct {
 	ErrorCount   int
 	Priority     int
 	MarkedBroken bool
+	LastOk       time.Time
 }
 
 type State struct {
@@ -218,7 +219,7 @@ func (a *App) states(w http.ResponseWriter, r *http.Request) {
 				result.Response = limitBody(state.Response)
 			}
 			//result.Time = state.time
-			result.LastOk = findLastOk(serviceState.States)
+			result.LastOk = serviceState.LastOk
 
 			resultGroup.Services = append(resultGroup.Services, result)
 		}

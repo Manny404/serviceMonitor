@@ -33,6 +33,7 @@ body {
     padding: 5px;
     flex-grow: 1;
     min-width: 220px;
+    min-height: 30px;
     width: 220px;
     text-decoration: none;
     color: black;
@@ -42,7 +43,7 @@ body {
 
     text-align: center;
     padding: 25px;
-
+    min-height: initial;
     margin: 5px;
 }
 
@@ -151,4 +152,12 @@ table {
 
 .table-striped tr:nth-of-type(odd) {
     background-color: rgba(0,0,0,.05);
+}
+
+.firstline {
+    margin-top: auto;
+}
+
+.lastline {
+    margin-bottom: auto;
 }

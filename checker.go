@@ -137,6 +137,10 @@ func (a *App) check(serviceState *ServiceState) {
 		defer a.stateLogMutex.Unlock()
 	}
 
+	if state.Ok {
+		serviceState.LastOk = time.Now()
+	}
+
 	serviceState.States = prepend(serviceState.States, state)
 }
 

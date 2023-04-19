@@ -169,14 +169,18 @@
                     serviceName = service.Service
                 }
 
+                row.classList.add("firstline")
                 row.append(document.createTextNode(serviceName));
                 kachel.append(row);
 
-                row = document.createElement("div");
-                row.append(document.createTextNode("Fehler: " + service.ErrorCount));
-                kachel.append(row);
+                if (service.ErrorCount != 0) {
+                    row = document.createElement("div");
+                    row.append(document.createTextNode("Fehler: " + service.ErrorCount));
+                    kachel.append(row);
+                }
 
                 row = document.createElement("div");
+                row.classList.add("lastline")
                 if (service.State != 'OK') {
                     row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
                 }
