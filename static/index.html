@@ -63,7 +63,7 @@
                 kachel.classList.add("kachel");
                 kachel.classList.add("kachelNOk");
                 kachel.classList.add("headerKachel");
-                kachel.append(document.createTextNode("ServiceMonitor returns an error"));
+                kachel.append(createTextNode(document, "ServiceMonitor returns an error"));
                 header.append(kachel);
 
 
@@ -133,7 +133,7 @@
 
             var groupHeader = document.createElement("div")
             groupHeader.classList.add("groupHeader");
-            groupHeader.append(document.createTextNode(he.encode(group.Name)));
+            groupHeader.append(createTextNode(document, group.Name));
             groupHolder.append(groupHeader);
 
             var groupFlexBox = document.createElement("div");
@@ -161,7 +161,7 @@
 
                 kachel.addEventListener("contextmenu", function (event) { markBroken(event, service.Id) }, false);
 
-                kachel.setAttribute('title', he.encode(service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response));
+                kachel.setAttribute('title', he.escape(service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response));
 
                 let row = document.createElement("div");
 
@@ -171,19 +171,19 @@
                 }
 
                 row.classList.add("firstline")
-                row.append(document.createTextNode(he.encode(serviceName)));
+                row.append(createTextNode(document, serviceName));
                 kachel.append(row);
 
                 if (service.ErrorCount != 0) {
                     row = document.createElement("div");
-                    row.append(document.createTextNode("Fehler: " + he.encode(service.ErrorCount)));
+                    row.append(createTextNode(document, "Fehler: " + service.ErrorCount));
                     kachel.append(row);
                 }
 
                 row = document.createElement("div");
                 row.classList.add("lastline")
                 if (service.State != 'OK') {
-                    row.append(document.createTextNode("Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
+                    row.append(createTextNode(document, "Last Ok: " + new Date(service.LastOk).toLocaleString("de-DE")));
                 }
                 kachel.append(row);
 
@@ -204,7 +204,7 @@
             kachel.classList.add("kachel");
             kachel.classList.add("kachelOk");
             kachel.classList.add("headerKachel");
-            kachel.append(document.createTextNode(servicesOk + "/" + services));
+            kachel.append(createTextNode(document, servicesOk + "/" + services));
             header.append(kachel);
         }
 
@@ -213,7 +213,7 @@
             kachel.classList.add("kachel");
             kachel.classList.add("kachelWarn");
             kachel.classList.add("headerKachel");
-            kachel.append(document.createTextNode(servicesWarn + "/" + services));
+            kachel.append(createTextNode(document, servicesWarn + "/" + services));
             header.append(kachel);
         }
 
@@ -222,7 +222,7 @@
             kachel.classList.add("kachel");
             kachel.classList.add("kachelNOk");
             kachel.classList.add("headerKachel");
-            kachel.append(document.createTextNode(servicesNok + "/" + services));
+            kachel.append(createTextNode(document, servicesNok + "/" + services));
             header.append(kachel);
             document.getElementById('icon').setAttribute("href", "red.png");
         }
@@ -359,6 +359,11 @@
         }
 
         return true;
+    }
+
+    function createTextNode(document, text) {
+
+        return document.createTextNode(he.escape(text + ''))
     }
 
 </script>
