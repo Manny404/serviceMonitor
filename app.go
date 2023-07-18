@@ -319,8 +319,7 @@ func (a *App) maintenanceReset() {
 
 		if a.MaintenanceMode && a.MaintenanceSetAt+(60*60) < time.Now().Unix() {
 			a.MaintenanceMode = false
+			a.Cache = rand.Int31()
 		}
-
 	}
-
 }

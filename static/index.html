@@ -5,6 +5,7 @@
 <head>
     <link rel="stylesheet" href="style.css">
     <link id="icon" rel="shortcut icon" type="image/x-icon" href="green.png">
+    <script type="text/javascript" src="script/he.js"></script>
 </head>
 
 
@@ -132,7 +133,7 @@
 
             var groupHeader = document.createElement("div")
             groupHeader.classList.add("groupHeader");
-            groupHeader.append(document.createTextNode(group.Name));
+            groupHeader.append(document.createTextNode(he.encode(group.Name)));
             groupHolder.append(groupHeader);
 
             var groupFlexBox = document.createElement("div");
@@ -160,7 +161,7 @@
 
                 kachel.addEventListener("contextmenu", function (event) { markBroken(event, service.Id) }, false);
 
-                kachel.setAttribute('title', service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response);
+                kachel.setAttribute('title', he.encode(service.Service + ' \n HTTP-Code: ' + service.HTTPCode + ' \n Body: ' + service.Response));
 
                 let row = document.createElement("div");
 
@@ -170,12 +171,12 @@
                 }
 
                 row.classList.add("firstline")
-                row.append(document.createTextNode(serviceName));
+                row.append(document.createTextNode(he.encode(serviceName)));
                 kachel.append(row);
 
                 if (service.ErrorCount != 0) {
                     row = document.createElement("div");
-                    row.append(document.createTextNode("Fehler: " + service.ErrorCount));
+                    row.append(document.createTextNode("Fehler: " + he.encode(service.ErrorCount)));
                     kachel.append(row);
                 }
 
