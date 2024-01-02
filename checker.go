@@ -327,6 +327,6 @@ func (a *App) filterNotificationReceiver(email string) (bool, bool) {
 		return false, false
 	}
 
-	// nomral send
+	// normal send
 	return true, false
 }
