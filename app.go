@@ -160,7 +160,7 @@ func (a *App) initializeRoutes() {
 
 func (a *App) Run(addr string) {
 	fmt.Println("Port: " + addr)
-	log.Fatal(http.ListenAndServe(":"+addr, a.Router))
+	log.Fatal(http.ListenAndServe("127.0.0.1:"+addr, a.Router))
 }
 
 func (a *App) states(w http.ResponseWriter, r *http.Request) {
