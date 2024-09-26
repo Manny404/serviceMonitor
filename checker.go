@@ -89,8 +89,14 @@ func (a *App) check(serviceState *ServiceState) {
 	customTransport := http.DefaultTransport.(*http.Transport) // make shallow copy
 	//customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
+	timeout := 5
+
+	if serviceState.Service.Timeout > 0 {
+		timeout = serviceState.Service.Timeout
+	}
+
 	client := http.Client{
-		Timeout:   5 * time.Second,
+		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: customTransport,
 	}
 

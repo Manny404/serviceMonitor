@@ -67,6 +67,7 @@ type Service struct {
 	Active        bool
 	PreventNotify bool
 	Priority      int
+	Timeout       int
 	Name          string
 	URL           string
 	KnownBroken   bool
