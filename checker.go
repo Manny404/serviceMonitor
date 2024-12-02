@@ -143,6 +143,10 @@ func (a *App) check(serviceState *ServiceState) {
 		defer a.stateLogMutex.Unlock()
 	}
 
+	if !state.Ok {
+		a.Cache = rand.Int31()
+	}
+
 	if state.Ok {
 		serviceState.LastOk = time.Now()
 	}
