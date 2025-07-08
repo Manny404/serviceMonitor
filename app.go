@@ -54,6 +54,14 @@ type Configuration struct {
 	SenderEmail  string
 
 	ServiceGroup []ServiceGroup
+
+	SevenIo SMSInfo
+}
+
+type SMSInfo struct {
+	URL      string
+	Absender string
+	APIKey   string
 }
 
 type ServiceGroup struct {

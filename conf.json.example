@@ -15,6 +15,11 @@
     "SMTPActive": true,
     "SMTPURL": "smtp.itrm.de",
     "SenderEmail": "sender@example.mail",
+        "SevenIo": {
+        "URL": "https://rest.spryngsms.com/v1",
+        "Absender": "SerMon",
+        "APIKey": ""  
+    },
     "ServiceGroup": [
         {
             "Name": "Group 2",

@@ -277,10 +277,22 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 			return
 		}
 
+		message := "Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo
+
+		for i := 0; i < len(to); i++ {
+
+			if !strings.Contains(to[i], "@") {
+				a.sendSevenioSMS(to[i], message)
+				to = append(to[:i], to[i+1:]...)
+			}
+		}
+
+		// Send emails
+
 		msg := []byte("To: " + a.Conf.SenderEmail + " \r\n" +
 			"Subject: Service " + serviceState.Service.Name + " has an error \r\n" +
 			"\r\n" +
-			"Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo)
+			message)
 
 		log.Println("Sende Email " + strings.Join(to, ",") + " " + serviceState.Service.Name)
 		if a.Conf.SMTPUser == "" {
