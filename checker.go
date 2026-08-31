@@ -138,9 +138,12 @@ func (a *App) check(serviceState *ServiceState) {
 		}
 
 		a.stateLogMutex.Lock()
-		a.StateLog = prepend(a.StateLog, logEntry)
-		a.Cache = rand.Int31()
 		defer a.stateLogMutex.Unlock()
+		a.Cache = rand.Int31()
+
+		if serviceState.Service.Priority >= 0 {
+			a.StateLog = prepend(a.StateLog, logEntry)
+		}
 	}
 
 	if !state.Ok {
