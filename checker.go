@@ -248,69 +248,77 @@ func (a *App) sendEmail(state State, serviceState *ServiceState, errorCount int)
 	}
 
 	for _, reportGroup := range a.Conf.ReportGroups {
+		a.notifyReportGroup(reportGroup, state, serviceState, errorCount)
+	}
 
-		if errorCount != reportGroup.NeededErrors {
-			continue
+	for _, reportGroup := range serviceState.Service.ReportGroups {
+		a.notifyReportGroup(reportGroup, state, serviceState, errorCount)
+	}
+}
+
+func (a *App) notifyReportGroup(reportGroup ReportGroup, state State, serviceState *ServiceState, errorCount int) {
+
+	if errorCount != reportGroup.NeededErrors {
+		return
+	}
+
+	if reportGroup.MinPriority > serviceState.Priority {
+		return
+	}
+
+	// Here we do it all: connect to our server, set up a message and send it
+	to := reportGroup.Emails
+
+	moreMessageFilteredInfo := ""
+
+	for i := 0; i < len(to); i++ {
+
+		var send = false
+		send, lastMessageBeforeFilter := a.filterNotificationReceiver(to[i])
+		if !send {
+			to = append(to[:i], to[i+1:]...)
+			i--
 		}
 
-		if reportGroup.MinPriority > serviceState.Priority {
-			continue
+		if lastMessageBeforeFilter {
+			moreMessageFilteredInfo = " More messages may be filtered!"
 		}
+	}
 
-		// Here we do it all: connect to our server, set up a message and send it
-		to := reportGroup.Emails
+	if len(to) == 0 {
+		return
+	}
 
-		moreMessageFilteredInfo := ""
+	message := "Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo
 
-		for i := 0; i < len(to); i++ {
+	for i := 0; i < len(to); i++ {
 
-			var send = false
-			send, lastMessageBeforeFilter := a.filterNotificationReceiver(to[i])
-			if !send {
-				to = append(to[:i], to[i+1:]...)
-				i--
-			}
-
-			if lastMessageBeforeFilter {
-				moreMessageFilteredInfo = " More messages may be filtered!"
-			}
+		if !strings.Contains(to[i], "@") {
+			a.sendSevenioSMS(to[i], message)
+			to = append(to[:i], to[i+1:]...)
 		}
+	}
 
-		if len(to) == 0 {
-			return
+	// Send emails
+
+	msg := []byte("To: " + a.Conf.SenderEmail + " \r\n" +
+		"Subject: Service " + serviceState.Service.Name + " has an error \r\n" +
+		"\r\n" +
+		message)
+
+	log.Println("Sende Email " + strings.Join(to, ",") + " " + serviceState.Service.Name)
+	if a.Conf.SMTPUser == "" {
+		err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
+		if err != nil {
+			log.Print("Email err:")
+			log.Println(err)
 		}
-
-		message := "Service " + serviceState.Service.Name + " has an error. Statuscode: " + strconv.Itoa(state.HTTPCode) + moreMessageFilteredInfo
-
-		for i := 0; i < len(to); i++ {
-
-			if !strings.Contains(to[i], "@") {
-				a.sendSevenioSMS(to[i], message)
-				to = append(to[:i], to[i+1:]...)
-			}
-		}
-
-		// Send emails
-
-		msg := []byte("To: " + a.Conf.SenderEmail + " \r\n" +
-			"Subject: Service " + serviceState.Service.Name + " has an error \r\n" +
-			"\r\n" +
-			message)
-
-		log.Println("Sende Email " + strings.Join(to, ",") + " " + serviceState.Service.Name)
-		if a.Conf.SMTPUser == "" {
-			err := smtp.SendMail(a.Conf.SMTPURL, nil, a.Conf.SenderEmail, to, msg)
-			if err != nil {
-				log.Print("Email err:")
-				log.Println(err)
-			}
-		} else {
-			//auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, strings.Split(a.Conf.SMTPURL, ":")[0])
-			err := smtp.SendMail(a.Conf.SMTPURL, LoginAuth(a.Conf.SMTPUser, a.Conf.SMTPPass), a.Conf.SenderEmail, to, msg)
-			if err != nil {
-				log.Print("Email err:")
-				log.Println(err)
-			}
+	} else {
+		//auth := smtp.PlainAuth("", a.Conf.SMTPUser, a.Conf.SMTPPass, strings.Split(a.Conf.SMTPURL, ":")[0])
+		err := smtp.SendMail(a.Conf.SMTPURL, LoginAuth(a.Conf.SMTPUser, a.Conf.SMTPPass), a.Conf.SenderEmail, to, msg)
+		if err != nil {
+			log.Print("Email err:")
+			log.Println(err)
 		}
 	}
 }

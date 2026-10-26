@@ -83,6 +83,7 @@ type Service struct {
 	HttpUser      string
 	HttpPass      string
 	Postparam     map[string]string
+	ReportGroups  []ReportGroup
 }
 
 type ServiceStateGroup struct {
