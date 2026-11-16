@@ -79,6 +79,7 @@ type Service struct {
 	Name          string
 	URL           string
 	KnownBroken   bool
+	HideInLog     bool
 	Methode       string
 	HttpUser      string
 	HttpPass      string

@@ -141,7 +141,7 @@ func (a *App) check(serviceState *ServiceState) {
 		defer a.stateLogMutex.Unlock()
 		a.Cache = rand.Int31()
 
-		if serviceState.Service.Priority >= 0 {
+		if serviceState.Service.Priority >= 0 && !serviceState.Service.HideInLog {
 			a.StateLog = prepend(a.StateLog, logEntry)
 		}
 	}
